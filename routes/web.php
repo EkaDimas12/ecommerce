@@ -128,6 +128,7 @@ Route::prefix('shipping')->name('shipping.')->group(function () {
     Route::get('/couriers', [ShippingController::class, 'couriers'])->name('couriers');
     Route::post('/check', [ShippingController::class, 'check'])->name('check');
     Route::post('/track', [ShippingController::class, 'track'])->name('track');
+    Route::get('/debug', [ShippingController::class, 'debug'])->name('debug');
 });
 
 

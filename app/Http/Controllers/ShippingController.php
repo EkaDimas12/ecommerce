@@ -38,8 +38,33 @@ class ShippingController extends Controller
             ]);
         }
 
-        $destinations = $this->komerce->searchDestination($keyword);
-        return response()->json(['ok' => true, 'data' => $destinations]);
+        try {
+            $destinations = $this->komerce->searchDestination($keyword);
+            return response()->json(['ok' => true, 'data' => $destinations]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+                'data' => []
+            ]);
+        }
+    }
+
+    /**
+     * Debug endpoint to check API configuration
+     */
+    public function debug()
+    {
+        return response()->json([
+            'ok' => true,
+            'config' => [
+                'cost_api_key_set' => !empty(config('services.komerce.cost_api_key')),
+                'tracking_api_key_set' => !empty(config('services.komerce.tracking_api_key')),
+                'base_url' => config('services.komerce.base_url'),
+                'origin_id' => env('ORIGIN_DESTINATION_ID'),
+            ],
+            'test' => 'API configuration loaded'
+        ]);
     }
 
     /**
