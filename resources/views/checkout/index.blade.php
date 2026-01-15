@@ -25,9 +25,9 @@
             originId: {{ (int) env('ORIGIN_DESTINATION_ID', 4816) }},
             csrf: @json(csrf_token()),
             urls: {
-                search: @json(route('shipping.search')),
-                couriers: @json(route('shipping.couriers')),
-                check: @json(route('shipping.check')),
+                search: '/shipping/search',
+                couriers: '/shipping/couriers',
+                check: '/shipping/check',
             }
         };
     </script>
