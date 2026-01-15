@@ -156,3 +156,69 @@ Route::get('/produk-terlaris', function () {
 Route::get('/search', function () {
     return redirect()->route('products.index', request()->query());
 })->name('products.search');
+
+
+/*
+|--------------------------------------------------------------------------
+| CUSTOM ADMIN
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Admin\ProductAdminController;
+use App\Http\Controllers\Admin\CategoryAdminController;
+use App\Http\Controllers\Admin\OrderAdminController;
+use App\Http\Controllers\Admin\UserAdminController;
+use App\Http\Controllers\Admin\TestimonialAdminController;
+
+Route::prefix('custom-admin')->middleware('auth')->name('admin.')->group(function () {
+    // Dashboard
+    Route::get('/', function () {
+        return view('admin.dashboard', [
+            'productCount' => \App\Models\Product::count(),
+            'categoryCount' => \App\Models\Category::count(),
+            'orderCount' => \App\Models\Order::count(),
+            'userCount' => \App\Models\User::count(),
+            'testimonialCount' => \App\Models\Testimonial::count(),
+            'pendingOrders' => \App\Models\Order::where('payment_status', 'pending')->count(),
+        ]);
+    })->name('dashboard');
+
+    // Categories
+    Route::get('/categories', [CategoryAdminController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [CategoryAdminController::class, 'create'])->name('categories.create');
+    Route::post('/categories', [CategoryAdminController::class, 'store'])->name('categories.store');
+    Route::get('/categories/{category}/edit', [CategoryAdminController::class, 'edit'])->name('categories.edit');
+    Route::put('/categories/{category}', [CategoryAdminController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [CategoryAdminController::class, 'destroy'])->name('categories.destroy');
+
+    // Products
+    Route::get('/products', [ProductAdminController::class, 'index'])->name('products.index');
+    Route::get('/products/create', [ProductAdminController::class, 'create'])->name('products.create');
+    Route::post('/products', [ProductAdminController::class, 'store'])->name('products.store');
+    Route::get('/products/{product}/edit', [ProductAdminController::class, 'edit'])->name('products.edit');
+    Route::put('/products/{product}', [ProductAdminController::class, 'update'])->name('products.update');
+    Route::delete('/products/{product}', [ProductAdminController::class, 'destroy'])->name('products.destroy');
+
+    // Orders
+    Route::get('/orders', [OrderAdminController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderAdminController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{order}/edit', [OrderAdminController::class, 'edit'])->name('orders.edit');
+    Route::put('/orders/{order}', [OrderAdminController::class, 'update'])->name('orders.update');
+    Route::delete('/orders/{order}', [OrderAdminController::class, 'destroy'])->name('orders.destroy');
+
+    // Users
+    Route::get('/users', [UserAdminController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [UserAdminController::class, 'create'])->name('users.create');
+    Route::post('/users', [UserAdminController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}/edit', [UserAdminController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserAdminController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserAdminController::class, 'destroy'])->name('users.destroy');
+
+    // Testimonials
+    Route::get('/testimonials', [TestimonialAdminController::class, 'index'])->name('testimonials.index');
+    Route::get('/testimonials/create', [TestimonialAdminController::class, 'create'])->name('testimonials.create');
+    Route::post('/testimonials', [TestimonialAdminController::class, 'store'])->name('testimonials.store');
+    Route::get('/testimonials/{testimonial}/edit', [TestimonialAdminController::class, 'edit'])->name('testimonials.edit');
+    Route::put('/testimonials/{testimonial}', [TestimonialAdminController::class, 'update'])->name('testimonials.update');
+    Route::delete('/testimonials/{testimonial}', [TestimonialAdminController::class, 'destroy'])->name('testimonials.destroy');
+});
+
