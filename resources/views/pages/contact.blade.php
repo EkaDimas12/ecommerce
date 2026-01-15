@@ -1,132 +1,147 @@
 @extends('layouts.app')
-@section('title','Contact — Tsania Craft')
+@section('title', 'Contact — Tsania Craft')
 
 @section('content')
 
-<section class="page-hero">
-  <div style="text-align:center;">
-    <h1 class="h1">Contact</h1>
-    <div style="margin-top:6px; font-size:14px; color:var(--muted);">
-      Home <span style="opacity:.6;">/</span> Contact
-    </div>
-    <p style="margin:14px auto 0; max-width:760px;" class="p-muted">
-      Hubungi kami untuk tanya stok, custom order, atau konsultasi souvenir.
-      Kamu juga bisa kirim testimoni agar tampil di Beranda.
-    </p>
-  </div>
-</section>
+    {{-- ================= HERO ================= --}}
+    <section class="hero-gradient rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-bubble/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 w-40 h-40 bg-almost/50 rounded-full blur-3xl"></div>
 
-<section class="section">
-  <div class="shop-grid" style="grid-template-columns: 1fr;">
-
-    {{-- FORM TESTIMONI --}}
-    <div class="card" style="padding:18px; width:100%;">
-      <div style="display:flex; align-items:end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-        <div>
-          <div class="h2">Kirim Testimoni</div>
-          <div style="margin-top:6px;" class="p-muted">
-            Testimoni kamu membantu pelanggan lain lebih percaya.
-          </div>
+        <div class="relative z-10">
+            <span class="badge badge-pink mb-4">📞 Hubungi Kami</span>
+            <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight text-ink">Contact</h1>
+            <div class="mt-2 text-sm text-ink/50">
+                Home <span class="opacity-50">/</span> Contact
+            </div>
+            <p class="mt-4 text-ink/70 max-w-2xl mx-auto leading-relaxed">
+                Hubungi kami untuk tanya stok, custom order, atau konsultasi souvenir.
+                Kamu juga bisa kirim testimoni agar tampil di Beranda.
+            </p>
         </div>
-        <span class="badge badge-terracotta">Testimonials</span>
-      </div>
+    </section>
 
-      {{-- ERROR VALIDASI --}}
-      @if ($errors->any())
-        <div class="card-soft" style="margin-top:14px; padding:14px;">
-          <div style="font-weight:800;">Periksa input:</div>
-          <ul style="margin-top:8px; padding-left:18px;" class="p-muted">
-            @foreach($errors->all() as $err)
-              <li>{{ $err }}</li>
-            @endforeach
-          </ul>
+    <section class="mt-10">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+            {{-- FORM TESTIMONI --}}
+            <div class="lg:col-span-3 card-static p-6 md:p-8">
+                <div class="flex items-start gap-4 mb-6">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-gradient-to-br from-bubble to-inlove flex items-center justify-center text-white text-xl flex-shrink-0">
+                        💬
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-extrabold text-ink">Kirim Testimoni</h2>
+                        <p class="mt-1 text-sm text-ink/60">Testimoni kamu membantu pelanggan lain lebih percaya.</p>
+                    </div>
+                </div>
+
+                {{-- ERROR VALIDASI --}}
+                @if ($errors->any())
+                    <div class="mb-5 p-4 rounded-xl bg-red-50 border border-red-200">
+                        <div class="font-bold text-red-700 flex items-center gap-2">
+                            <span>❌</span> Periksa input:
+                        </div>
+                        <ul class="mt-2 text-red-600 text-sm space-y-1 ml-6 list-disc">
+                            @foreach ($errors->all() as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('testimonials.store') }}" class="space-y-4">
+                    @csrf
+
+                    {{-- Nama --}}
+                    <div>
+                        <label for="name" class="block text-sm font-semibold text-ink/70 mb-2">Nama</label>
+                        <input id="name" class="field" name="name" value="{{ old('name') }}"
+                            placeholder="Contoh: Nabila">
+                    </div>
+
+                    {{-- Rating --}}
+                    <div>
+                        <label for="rating" class="block text-sm font-semibold text-ink/70 mb-2">Rating</label>
+                        <select id="rating" class="field" name="rating">
+                            <option value="">Pilih rating</option>
+                            <option value="5" @selected(old('rating') == 5)>⭐⭐⭐⭐⭐ (5)</option>
+                            <option value="4" @selected(old('rating') == 4)>⭐⭐⭐⭐ (4)</option>
+                            <option value="3" @selected(old('rating') == 3)>⭐⭐⭐ (3)</option>
+                            <option value="2" @selected(old('rating') == 2)>⭐⭐ (2)</option>
+                            <option value="1" @selected(old('rating') == 1)>⭐ (1)</option>
+                        </select>
+                    </div>
+
+                    {{-- Pesan --}}
+                    <div>
+                        <label for="message" class="block text-sm font-semibold text-ink/70 mb-2">Pesan</label>
+                        <textarea id="message" class="field" name="message" rows="5" placeholder="Tulis testimoni kamu..."
+                            style="resize:vertical;">{{ old('message') }}</textarea>
+                        <div class="mt-1 text-xs text-ink/50">Maks. 600 karakter.</div>
+                    </div>
+
+                    {{-- Tombol --}}
+                    <div class="flex gap-3 flex-wrap pt-2">
+                        <button type="submit" class="btn-primary">✨ Kirim Testimoni</button>
+                        <a class="btn-outline" href="{{ route('products.index') }}">🛍️ Lihat Produk</a>
+                    </div>
+                </form>
+            </div>
+
+            {{-- INFO KONTAK --}}
+            <div class="lg:col-span-2 space-y-5">
+                <div class="card-static p-6">
+                    <h2 class="text-lg font-extrabold text-ink flex items-center gap-2">
+                        <span
+                            class="w-8 h-8 rounded-lg bg-humble flex items-center justify-center text-white text-sm">📱</span>
+                        Informasi Kontak
+                    </h2>
+                    <p class="mt-3 text-sm text-ink/60">
+                        Respon tercepat via WhatsApp. Untuk custom order, sebutkan detail ukuran/warna/tema.
+                    </p>
+
+                    <div class="mt-5 space-y-3">
+                        <div class="flex items-center gap-3 p-3 rounded-xl bg-pinkbg">
+                            <span class="text-xl">📞</span>
+                            <div class="text-sm font-medium">+62 812-3456-7890</div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 rounded-xl bg-pinkbg">
+                            <span class="text-xl">📧</span>
+                            <div class="text-sm font-medium">hello@tsaniacraft.id</div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 rounded-xl bg-pinkbg">
+                            <span class="text-xl">📸</span>
+                            <div class="text-sm font-medium">@tsaniacraft</div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 rounded-xl bg-pinkbg">
+                            <span class="text-xl">🕐</span>
+                            <div class="text-sm font-medium">Senin–Sabtu, 09.00–17.00</div>
+                        </div>
+                    </div>
+
+                    @php $wa = env('WHATSAPP_NUMBER','6281234567890'); @endphp
+                    <div class="mt-5 flex flex-col gap-3">
+                        <a class="btn-secondary text-center"
+                            href="https://wa.me/{{ $wa }}?text={{ urlencode('Halo Tsania Craft, saya mau tanya produk / custom order.') }}">
+                            💬 Chat WhatsApp
+                        </a>
+                        <a class="btn-outline text-center" href="{{ route('help') }}">❓ Bantuan / FAQ</a>
+                    </div>
+                </div>
+
+                <div class="card-static p-5">
+                    <div class="flex items-center gap-2 text-sm font-bold text-ink">
+                        <span>📝</span> Catatan
+                    </div>
+                    <p class="mt-2 text-sm text-ink/60">
+                        Untuk pemesanan custom, estimasi produksi biasanya 2–5 hari (tergantung antrian & tingkat detail).
+                    </p>
+                </div>
+            </div>
+
         </div>
-      @endif
-
-      <form method="POST" action="{{ route('testimonials.store') }}"
-            style="margin-top:16px; display:grid; gap:14px; width:100%;">
-        @csrf
-
-        {{-- Nama --}}
-        <div style="width:100%; display:grid; gap:6px;">
-          <label for="name" style="font-size:13px; color:var(--muted); font-weight:700;">Nama</label>
-          <input id="name" class="field" name="name" value="{{ old('name') }}"
-                 placeholder="Contoh: Nabila" style="width:100%;">
-        </div>
-
-        {{-- Rating --}}
-        <div style="width:100%; display:grid; gap:6px;">
-          <label for="rating" style="font-size:13px; color:var(--muted); font-weight:700;">Rating</label>
-          <select id="rating" class="field" name="rating" style="width:100%;">
-            <option value="">Pilih rating</option>
-            <option value="5" @selected(old('rating')==5)>★★★★★ (5)</option>
-            <option value="4" @selected(old('rating')==4)>★★★★☆ (4)</option>
-            <option value="3" @selected(old('rating')==3)>★★★☆☆ (3)</option>
-            <option value="2" @selected(old('rating')==2)>★★☆☆☆ (2)</option>
-            <option value="1" @selected(old('rating')==1)>★☆☆☆☆ (1)</option>
-          </select>
-        </div>
-
-        {{-- Pesan --}}
-        <div style="width:100%; display:grid; gap:6px;">
-          <label for="message" style="font-size:13px; color:var(--muted); font-weight:700;">Pesan</label>
-          <textarea id="message" class="field" name="message" rows="6"
-                    placeholder="Tulis testimoni kamu..." style="width:100%; resize:vertical;">{{ old('message') }}</textarea>
-          <div style="font-size:12px; color:var(--muted);">Maks. 600 karakter.</div>
-        </div>
-
-        {{-- Tombol --}}
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-          <button type="submit" class="btn btn-dark">Kirim Testimoni</button>
-          <a class="btn btn-outline" href="{{ route('products.index') }}">Lihat Produk</a>
-        </div>
-
-      </form>
-    </div>
-
-    {{-- INFO KONTAK --}}
-    <div class="card" style="padding:18px; width:100%;">
-      <div class="h2">Informasi Kontak</div>
-      <div style="margin-top:10px;" class="p-muted">
-        Respon tercepat via WhatsApp. Untuk custom order, sebutkan detail ukuran/warna/tema.
-      </div>
-
-      <div style="margin-top:14px; display:grid; gap:10px;" class="p-muted">
-        <div><b>WhatsApp:</b> +62-812-3456-789</div>
-        <div><b>Email:</b> hello@tsaniacraft.test</div>
-        <div><b>Instagram:</b> @tsaniacraft</div>
-        <div><b>Alamat:</b> (isi alamat lengkap)</div>
-        <div><b>Jam CS:</b> Senin–Sabtu 09.00–17.00</div>
-      </div>
-
-      @php $wa = env('WHATSAPP_NUMBER','6281234567890'); @endphp
-      <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-        <a class="btn btn-primary"
-           href="https://wa.me/{{ $wa }}?text={{ urlencode('Halo Tsania Craft, saya mau tanya produk / custom order.') }}">
-          Chat WhatsApp
-        </a>
-        <a class="btn btn-outline" href="{{ route('help') }}">Bantuan / FAQ</a>
-      </div>
-
-      <div class="card-soft" style="margin-top:14px; padding:14px;">
-        <div style="font-weight:800;">Catatan</div>
-        <div style="margin-top:6px;" class="p-muted">
-          Untuk pemesanan custom, estimasi produksi biasanya 2–5 hari (tergantung antrian & tingkat detail).
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  {{-- responsive jadi 2 kolom di desktop --}}
-  <style>
-    @media(min-width:1024px){
-      section.section .shop-grid{
-        grid-template-columns: 1.15fr .85fr !important;
-        align-items: start !important;
-      }
-    }
-  </style>
-</section>
+    </section>
 
 @endsection

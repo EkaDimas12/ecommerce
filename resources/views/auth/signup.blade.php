@@ -1,114 +1,170 @@
 @extends('layouts.app')
-@section('title','Sign Up — Tsania Craft')
+@section('title', 'Sign Up — Tsania Craft')
 
 @section('content')
 
-{{-- HERO --}}
-<section class="page-hero">
-  <div style="text-align:center;">
-    <h1 class="h1">Sign Up</h1>
-    <p class="p-muted" style="margin-top:10px; max-width:720px; margin-left:auto; margin-right:auto;">
-      Daftar sekarang untuk mendapatkan pengalaman belanja lebih cepat dan promo khusus member.
-      <b>Diskon 20%</b> untuk pesanan pertama ✨
-    </p>
-  </div>
-</section>
-
-<section class="section">
-  <div style="max-width:520px; margin-left:auto; margin-right:auto; display:grid; gap:14px;">
-
-    {{-- Card Form --}}
-    <div class="card" style="padding:22px;">
-      <div style="display:flex; justify-content:space-between; align-items:end; gap:12px; flex-wrap:wrap;">
-        <div>
-          <div class="h2">Buat Akun Baru</div>
-          <div class="p-muted" style="margin-top:6px;">
-            Isi data di bawah ini untuk mendaftar.
-          </div>
+    {{-- HERO --}}
+    <section
+        style="background: linear-gradient(135deg, #fff 0%, #FEF0F5 50%, #FCE8EF 100%); border-radius: 24px; padding: 48px 32px; text-align: center; position: relative; overflow: hidden; border: 1px solid rgba(74,32,42,0.08);">
+        <div style="position: relative; z-index: 10;">
+            <span
+                style="display: inline-block; padding: 8px 16px; background: #FCD6E3; border: 1px solid #E4879E; border-radius: 999px; font-size: 12px; font-weight: 600; color: #4A202A; margin-bottom: 16px;">
+                ✨ Bergabung Sekarang
+            </span>
+            <h1 style="font-size: 36px; font-weight: 800; color: #2b0f16; margin: 0;">Sign Up</h1>
+            <p
+                style="margin-top: 16px; color: rgba(43,15,22,0.7); max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                Daftar sekarang untuk mendapatkan pengalaman belanja lebih cepat dan promo khusus member.
+                <strong style="color: #83394A;">Diskon 20%</strong> untuk pesanan pertama!
+            </p>
         </div>
-        <span class="badge badge-terracotta">Member</span>
-      </div>
+    </section>
 
-      <div class="divider" style="margin:14px 0;"></div>
+    <section style="margin-top: 40px;">
+        <div style="max-width: 480px; margin: 0 auto;">
 
-      {<form method="POST" action="{{ route('register.store') }}" style="display:grid; gap:12px;">
-  @csrf
+            {{-- Form Card --}}
+            <div
+                style="background: white; border: 1px solid rgba(74,32,42,0.08); border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(74,32,42,0.08);">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+                    <div
+                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #E4879E, #83394A); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        👤
+                    </div>
+                    <div>
+                        <h2 style="font-size: 20px; font-weight: 800; color: #2b0f16; margin: 0;">Buat Akun Baru</h2>
+                        <p style="font-size: 14px; color: rgba(43,15,22,0.6); margin: 4px 0 0 0;">Isi data di bawah ini
+                            untuk mendaftar.</p>
+                    </div>
+                </div>
 
-  <div class="field-wrap">
-    <label class="label" for="fullname">Nama Lengkap</label>
-    <input id="fullname" name="name" type="text" class="field"
-           value="{{ old('name') }}" placeholder="Nama kamu" required>
-    @error('name') <div class="p-muted" style="color:#b00020;">{{ $message }}</div> @enderror
-  </div>
+                @if ($errors->any())
+                    <div
+                        style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                        <div style="font-weight: 700; color: #DC2626; display: flex; align-items: center; gap: 8px;">
+                            ❌ Periksa input:
+                        </div>
+                        <ul style="margin: 8px 0 0 24px; color: #DC2626; font-size: 14px;">
+                            @foreach ($errors->all() as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
-  <div class="field-wrap">
-    <label class="label" for="email">Email</label>
-    <input id="email" name="email" type="email" class="field"
-           value="{{ old('email') }}" placeholder="email@example.com" required>
-    @error('email') <div class="p-muted" style="color:#b00020;">{{ $message }}</div> @enderror
-  </div>
+                <form method="POST" action="{{ route('register.store') }}">
+                    @csrf
 
-  <div class="field-wrap">
-    <label class="label" for="phone">No. WhatsApp</label>
-    <input id="phone" name="phone" type="text" class="field"
-           value="{{ old('phone') }}" placeholder="+62xxxxxxxxxx" required>
-    @error('phone') <div class="p-muted" style="color:#b00020;">{{ $message }}</div> @enderror
-  </div>
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; font-size: 14px; font-weight: 600; color: rgba(43,15,22,0.7); margin-bottom: 8px;">Nama
+                            Lengkap</label>
+                        <input type="text" name="name" value="{{ old('name') }}" placeholder="Nama kamu" required
+                            style="width: 100%; padding: 14px 16px; border: 1.5px solid rgba(74,32,42,0.12); border-radius: 14px; font-size: 14px; box-sizing: border-box;">
+                    </div>
 
-  <div class="field-wrap">
-    <label class="label" for="password">Password</label>
-    <input id="password" name="password" type="password" class="field"
-           placeholder="••••••••" required>
-    @error('password') <div class="p-muted" style="color:#b00020;">{{ $message }}</div> @enderror
-  </div>
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; font-size: 14px; font-weight: 600; color: rgba(43,15,22,0.7); margin-bottom: 8px;">Email</label>
+                        <input type="email" name="email" value="{{ old('email') }}" placeholder="email@example.com"
+                            required
+                            style="width: 100%; padding: 14px 16px; border: 1.5px solid rgba(74,32,42,0.12); border-radius: 14px; font-size: 14px; box-sizing: border-box;">
+                    </div>
 
-  <div class="field-wrap">
-    <label class="label" for="password2">Konfirmasi Password</label>
-    <input id="password2" name="password_confirmation" type="password" class="field"
-           placeholder="••••••••" required>
-  </div>
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; font-size: 14px; font-weight: 600; color: rgba(43,15,22,0.7); margin-bottom: 8px;">No.
+                            WhatsApp</label>
+                        <input type="text" name="phone" value="{{ old('phone') }}" placeholder="+62xxxxxxxxxx"
+                            required
+                            style="width: 100%; padding: 14px 16px; border: 1.5px solid rgba(74,32,42,0.12); border-radius: 14px; font-size: 14px; box-sizing: border-box;">
+                    </div>
 
-  <button type="submit" class="btn btn-dark" style="width:100%; margin-top:6px;">
-    Sign Up
-  </button>
-</form>
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; font-size: 14px; font-weight: 600; color: rgba(43,15,22,0.7); margin-bottom: 8px;">Password</label>
+                        <input type="password" name="password" placeholder="Min. 8 karakter" required
+                            style="width: 100%; padding: 14px 16px; border: 1.5px solid rgba(74,32,42,0.12); border-radius: 14px; font-size: 14px; box-sizing: border-box;">
+                    </div>
 
-    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label
+                            style="display: block; font-size: 14px; font-weight: 600; color: rgba(43,15,22,0.7); margin-bottom: 8px;">Konfirmasi
+                            Password</label>
+                        <input type="password" name="password_confirmation" placeholder="Ulangi password" required
+                            style="width: 100%; padding: 14px 16px; border: 1.5px solid rgba(74,32,42,0.12); border-radius: 14px; font-size: 14px; box-sizing: border-box;">
+                    </div>
 
-    {{-- Benefit --}}
-    <div class="card-soft" style="padding:18px;">
-      <div style="font-weight:900;">Keuntungan Member</div>
-      <div class="divider" style="margin:12px 0;"></div>
+                    <button type="submit"
+                        style="width: 100%; padding: 14px 24px; background: #4A202A; color: white; font-weight: 700; font-size: 15px; border: none; border-radius: 999px; cursor: pointer; box-shadow: 0 4px 14px rgba(74,32,42,0.2);">
+                        ✨ Daftar Sekarang
+                    </button>
 
-      <div style="display:grid; gap:10px;">
-        <div style="display:flex; gap:10px; align-items:flex-start;">
-          <span class="badge badge-olive">Promo</span>
-          <div class="p-muted">Diskon & promo khusus member.</div>
+                    <p style="text-align: center; font-size: 12px; color: rgba(43,15,22,0.5); margin-top: 16px;">
+                        Dengan mendaftar, kamu menyetujui <a href="#" style="color: #83394A;">Syarat & Ketentuan</a>
+                        dan <a href="#" style="color: #83394A;">Kebijakan Privasi</a>.
+                    </p>
+                </form>
+            </div>
+
+            {{-- Benefits --}}
+            <div
+                style="background: white; border: 1px solid rgba(74,32,42,0.08); border-radius: 20px; padding: 24px; margin-top: 24px; box-shadow: 0 4px 20px rgba(74,32,42,0.08);">
+                <div
+                    style="font-weight: 700; color: #2b0f16; display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                    <span
+                        style="width: 32px; height: 32px; background: #FCD6E3; border-radius: 8px; display: flex; align-items: center; justify-content: center;">🎁</span>
+                    Keuntungan Member
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div
+                        style="display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: #FEF0F5; border-radius: 12px;">
+                        <span
+                            style="width: 32px; height: 32px; background: rgba(228,135,158,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #E4879E; flex-shrink: 0;">🏷️</span>
+                        <div>
+                            <div style="font-weight: 600; color: #2b0f16; font-size: 14px;">Promo Eksklusif</div>
+                            <div style="font-size: 12px; color: rgba(43,15,22,0.6);">Diskon & promo khusus untuk member.
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        style="display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: #FEF0F5; border-radius: 12px;">
+                        <span
+                            style="width: 32px; height: 32px; background: rgba(228,135,158,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #E4879E; flex-shrink: 0;">⚡</span>
+                        <div>
+                            <div style="font-weight: 600; color: #2b0f16; font-size: 14px;">Checkout Cepat</div>
+                            <div style="font-size: 12px; color: rgba(43,15,22,0.6);">Checkout lebih cepat, data tersimpan.
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        style="display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: #FEF0F5; border-radius: 12px;">
+                        <span
+                            style="width: 32px; height: 32px; background: rgba(228,135,158,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #E4879E; flex-shrink: 0;">📦</span>
+                        <div>
+                            <div style="font-weight: 600; color: #2b0f16; font-size: 14px;">Lacak Pesanan</div>
+                            <div style="font-size: 12px; color: rgba(43,15,22,0.6);">Riwayat pesanan dan status pengiriman.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{{ route('products.index') }}"
+                    style="display: block; width: 100%; text-align: center; padding: 12px 20px; background: white; border: 1.5px solid rgba(74,32,42,0.15); color: #2b0f16; font-weight: 700; font-size: 14px; border-radius: 999px; margin-top: 16px; text-decoration: none; box-sizing: border-box;">
+                    🛍️ Lihat Produk
+                </a>
+            </div>
+
+            {{-- Login Link --}}
+            <div
+                style="background: white; border: 1px solid rgba(74,32,42,0.08); border-radius: 20px; padding: 20px; margin-top: 24px; text-align: center; box-shadow: 0 4px 20px rgba(74,32,42,0.08);">
+                <span style="color: rgba(43,15,22,0.6);">Sudah punya akun?</span>
+                <a href="{{ route('login') }}"
+                    style="margin-left: 8px; font-weight: 700; color: #83394A; text-decoration: none;">Login →</a>
+            </div>
+
         </div>
-        <div style="display:flex; gap:10px; align-items:flex-start;">
-          <span class="badge badge-olive">Cepat</span>
-          <div class="p-muted">Checkout lebih cepat & data tersimpan.</div>
-        </div>
-        <div style="display:flex; gap:10px; align-items:flex-start;">
-          <span class="badge badge-olive">Riwayat</span>
-          <div class="p-muted">Riwayat pesanan dan status pengiriman.</div>
-        </div>
-      </div>
-
-      <div style="text-align:center; margin-top:14px;">
-        <a href="{{ route('products.index') }}" class="btn btn-outline" style="width:100%;">
-          Lihat Produk
-        </a>
-      </div>
-    </div>
-
-    {{-- Login link --}}
-    <div class="btn btn-dark" style="text-align:center;" class="p-muted">
-      Sudah punya akun?
-      <a href="#" class="nav-link" style="font-weight:900; display:inline-block;">Login</a>
-    </div>
-
-  </div>
-</section>
+    </section>
 
 @endsection

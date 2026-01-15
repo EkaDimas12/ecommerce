@@ -37,11 +37,10 @@ return [
         'client_key' => env('MIDTRANS_CLIENT_KEY'),
     ],
 
-'rajaongkir' => [
-    'key' => env('RAJAONGKIR_API_KEY'),
-    'base_url' => env('RAJAONGKIR_BASE_URL', 'https://api.rajaongkir.com/starter'),
+'komerce' => [
+    'cost_api_key' => env('KOMERCE_COST_API_KEY'),
+    'tracking_api_key' => env('KOMERCE_TRACKING_API_KEY'),
+    'base_url' => env('KOMERCE_BASE_URL', 'https://rajaongkir.komerce.id/api/v1'),
 ],
-
-
 
 ];

@@ -2,48 +2,104 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\KomerceService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class ShippingController extends Controller
 {
+    protected KomerceService $komerce;
+
+    public function __construct(KomerceService $komerce)
+    {
+        $this->komerce = $komerce;
+    }
+
+    /**
+     * Get list of provinces
+     */
+    public function provinces()
+    {
+        $provinces = $this->komerce->getProvinces();
+        return response()->json(['ok' => true, 'data' => $provinces]);
+    }
+
+    /**
+     * Search destination (city, district, subdistrict)
+     */
+    public function searchDestination(Request $request)
+    {
+        $keyword = $request->query('q', '');
+        
+        if (strlen($keyword) < 3) {
+            return response()->json([
+                'ok' => false, 
+                'message' => 'Minimal 3 karakter untuk pencarian',
+                'data' => []
+            ]);
+        }
+
+        $destinations = $this->komerce->searchDestination($keyword);
+        return response()->json(['ok' => true, 'data' => $destinations]);
+    }
+
+    /**
+     * Get available couriers
+     */
+    public function couriers()
+    {
+        $couriers = $this->komerce->getAvailableCouriers();
+        return response()->json(['ok' => true, 'data' => $couriers]);
+    }
+
+    /**
+     * Check shipping cost
+     */
     public function check(Request $request)
     {
         $request->validate([
-            'destination_city_id' => 'required|integer',
-            'courier' => 'required|string|in:jne,pos,tiki',
+            'origin' => 'required|integer',
+            'destination' => 'required|integer',
             'weight' => 'required|integer|min:1',
+            'courier' => 'required|string',
         ]);
 
-        $origin = (int) env('CITY_ID_ORIGIN', 23);
+        $costs = $this->komerce->checkCost(
+            (int) $request->origin,
+            (int) $request->destination,
+            (int) $request->weight,
+            $request->courier
+        );
 
-        $res = Http::withHeaders([
-            'key' => config('services.rajaongkir.key'),
-            'Accept' => 'application/json',
-        ])->post(config('services.rajaongkir.base_url') . '/cost', [
-            'origin' => $origin,
-            'destination' => (int) $request->destination_city_id,
-            'weight' => (int) $request->weight,
-            'courier' => $request->courier,
-        ]);
-
-        if (!$res->ok()) {
-            return response()->json(['ok' => false, 'message' => 'Gagal cek ongkir'], 500);
+        if (empty($costs)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Tidak dapat mengambil data ongkir. Coba kurir lain.',
+                'services' => [],
+            ]);
         }
 
-        $costs = data_get($res->json(), 'rajaongkir.results.0.costs', []);
+        return response()->json(['ok' => true, 'services' => $costs]);
+    }
 
-        $services = collect($costs)->map(function ($c) {
-            $cost = $c['cost'][0]['value'] ?? 0;
-            $etd = $c['cost'][0]['etd'] ?? '-';
-            return [
-                'service' => $c['service'] ?? '-',
-                'description' => $c['description'] ?? '',
-                'cost' => (int) $cost,
-                'etd' => (string) $etd,
-            ];
-        })->values();
+    /**
+     * Track shipment by AWB
+     */
+    public function track(Request $request)
+    {
+        $request->validate([
+            'awb' => 'required|string',
+            'courier' => 'required|string',
+        ]);
 
-        return response()->json(['ok' => true, 'services' => $services]);
+        $tracking = $this->komerce->trackShipment($request->awb, $request->courier);
+
+        if (!$tracking) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Tidak dapat melacak pengiriman.',
+            ], 404);
+        }
+
+        return response()->json(['ok' => true, 'data' => $tracking]);
     }
 }

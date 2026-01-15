@@ -15,10 +15,24 @@ use App\Http\Controllers\AuthController;
 
 Route::middleware('guest')->group(function () {
   Route::get('/signup', [AuthController::class, 'showRegister'])->name('signup');
+  Route::get('/register', fn() => redirect()->route('signup'))->name('register');
     Route::post('/signup', [AuthController::class, 'register'])->name('register.store');
 
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+});
+
+// Logout route (requires auth)
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+// User order history
+Route::get('/pesanan-saya', [OrderController::class, 'history'])->name('orders.history')->middleware('auth');
+
+// User settings
+Route::middleware('auth')->group(function () {
+    Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/pengaturan/profil', [\App\Http\Controllers\SettingsController::class, 'updateProfile'])->name('settings.profile');
+    Route::put('/pengaturan/password', [\App\Http\Controllers\SettingsController::class, 'updatePassword'])->name('settings.password');
 });
 
 
@@ -28,9 +42,6 @@ Route::middleware('guest')->group(function () {
 | ORDER
 |--------------------------------------------------------------------------
 */
-Route::get('/order/{code}', [OrderController::class, 'show'])
-    ->name('order.show');
-
 Route::post('/midtrans/notification', [MidtransController::class, 'notification'])->name('midtrans.notification');
 Route::get('/payment/finish', [MidtransController::class, 'finish'])->name('payment.finish');
 Route::get('/payment/unfinish', [MidtransController::class, 'unfinish'])->name('payment.unfinish');
@@ -77,10 +88,10 @@ Route::get('/produk/{slug}', [ProductController::class, 'show'])
 
 
 
-Route::get('/keranjang', [CartController::class, 'index'])->name('cart.index');
-Route::post('/keranjang/add', [CartController::class, 'add'])->name('cart.add');
-Route::post('/keranjang/remove', [CartController::class, 'remove'])->name('cart.remove');
-Route::post('/keranjang/clear', [CartController::class, 'clear'])->name('cart.clear');
+Route::get('/keranjang', [CartController::class, 'index'])->name('cart.index')->middleware('auth');
+Route::post('/keranjang/add', [CartController::class, 'add'])->name('cart.add')->middleware('auth');
+Route::post('/keranjang/remove', [CartController::class, 'remove'])->name('cart.remove')->middleware('auth');
+Route::post('/keranjang/clear', [CartController::class, 'clear'])->name('cart.clear')->middleware('auth');
 
 
 
@@ -92,24 +103,32 @@ Route::post('/keranjang/clear', [CartController::class, 'clear'])->name('cart.cl
 |--------------------------------------------------------------------------
 */
 Route::get('/checkout', [CheckoutController::class, 'index'])
-    ->name('checkout.index');
+    ->name('checkout.index')
+    ->middleware('auth');
 
 Route::post('/checkout', [CheckoutController::class, 'store'])
-    ->name('checkout.store');
+    ->name('checkout.store')
+    ->middleware('auth');
 
 Route::get('/order/{code}', [OrderController::class, 'show'])
     ->name('order.show');
-    Route::get('/order/{code}/print', [OrderController::class, 'print'])->name('order.print');
+Route::get('/order/{code}/print', [OrderController::class, 'print'])->name('order.print');
+Route::post('/order/{code}/cancel', [OrderController::class, 'cancel'])->name('order.cancel')->middleware('auth');
 
 
 
 /*
 |--------------------------------------------------------------------------
-| SHIPPING (ONGKIR)
+| SHIPPING (ONGKIR) - Komerce.id API
 |--------------------------------------------------------------------------
 */
-Route::post('/shipping/check', [ShippingController::class, 'check'])
-    ->name('shipping.check');
+Route::prefix('shipping')->name('shipping.')->group(function () {
+    Route::get('/provinces', [ShippingController::class, 'provinces'])->name('provinces');
+    Route::get('/search', [ShippingController::class, 'searchDestination'])->name('search');
+    Route::get('/couriers', [ShippingController::class, 'couriers'])->name('couriers');
+    Route::post('/check', [ShippingController::class, 'check'])->name('check');
+    Route::post('/track', [ShippingController::class, 'track'])->name('track');
+});
 
 
 /*

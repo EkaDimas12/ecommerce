@@ -11,7 +11,7 @@ class AuthController extends Controller
 {
     public function showRegister()
     {
-        return view('auth.register'); // view kamu (Sign Up)
+        return view('auth.signup'); // view Sign Up
     }
 
     public function register(Request $request)
@@ -36,8 +36,13 @@ class AuthController extends Controller
         return redirect()->route('products.index')->with('success', 'Akun berhasil dibuat. Selamat datang!');
     }
 
-    public function showLogin()
+    public function showLogin(Request $request)
     {
+        // Simpan redirect URL ke session jika ada
+        if ($request->has('redirect')) {
+            session()->put('url.intended', $request->redirect);
+        }
+        
         return view('auth.login');
     }
 

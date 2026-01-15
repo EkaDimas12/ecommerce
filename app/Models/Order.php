@@ -8,6 +8,7 @@ class Order extends Model
 {
     protected $fillable = [
         'code',
+        'user_id',
         'customer_name',
         'phone',
         'email',
@@ -16,12 +17,14 @@ class Order extends Model
         'postal_code',
         'courier',
         'service',
+        'tracking_number',
         'shipping_cost',
         'subtotal',
         'total',
         'payment_method',
         'payment_status',
         'order_status',
+        'notes',
     ];
 
     public function items()
