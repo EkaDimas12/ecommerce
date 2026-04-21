@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderAdminController extends Controller
 {
@@ -54,12 +56,26 @@ class OrderAdminController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $order->update([
-            'payment_status' => $request->payment_status,
-            'order_status' => $request->order_status,
-            'tracking_number' => $request->tracking_number,
-            'notes' => $request->notes,
-        ]);
+        $wasNotCancelled = $order->order_status !== 'cancelled';
+        $willBeCancelled = $request->order_status === 'cancelled';
+
+        DB::transaction(function () use ($order, $request, $wasNotCancelled, $willBeCancelled) {
+            $order->update([
+                'payment_status' => $request->payment_status,
+                'order_status' => $request->order_status,
+                'tracking_number' => $request->tracking_number,
+                'notes' => $request->notes,
+            ]);
+
+            // Jika status berubah menjadi cancelled, kembalikan stok
+            if ($wasNotCancelled && $willBeCancelled) {
+                foreach ($order->items as $item) {
+                    Product::where('id', $item->product_id)
+                        ->whereNotNull('stock')
+                        ->increment('stock', $item->qty);
+                }
+            }
+        });
 
         return redirect()->route('admin.orders.index')
             ->with('success', 'Pesanan berhasil diperbarui!');
@@ -67,8 +83,19 @@ class OrderAdminController extends Controller
 
     public function destroy(Order $order)
     {
-        $order->items()->delete();
-        $order->delete();
+        DB::transaction(function () use ($order) {
+            // Jika pesanan belum dibatalkan, kembalikan stok terlebih dahulu
+            if ($order->order_status !== 'cancelled') {
+                foreach ($order->items as $item) {
+                    Product::where('id', $item->product_id)
+                        ->whereNotNull('stock')
+                        ->increment('stock', $item->qty);
+                }
+            }
+
+            $order->items()->delete();
+            $order->delete();
+        });
         return redirect()->route('admin.orders.index')
             ->with('success', 'Pesanan berhasil dihapus!');
     }

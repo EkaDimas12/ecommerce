@@ -33,6 +33,16 @@
                 $subtotal = collect($cart)->sum(fn($i) => (int) ($i['price'] ?? 0) * (int) ($i['qty'] ?? 1));
             @endphp
 
+            @if (!empty($hasChanges))
+                <div class="mb-6 p-4 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 flex items-start gap-3">
+                    <span class="text-xl">⚠️</span>
+                    <div>
+                        <strong class="block font-bold">Keranjang Diperbarui</strong>
+                        <span class="text-sm">Beberapa item di keranjang Anda telah diperbarui (harga berubah, stok habis, atau produk tidak tersedia lagi). Silakan periksa kembali sebelum checkout.</span>
+                    </div>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
                 {{-- LIST ITEM --}}
                 <div class="card-static p-5 md:p-6">

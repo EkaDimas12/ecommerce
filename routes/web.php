@@ -61,8 +61,8 @@ Route::get('/informasi-pemesanan', [PageController::class, 'orderingInfo'])
     ->name('ordering.info');
 
 Route::get('/kontak', [PageController::class, 'contact'])->name('contact');
-Route::post('/kontak', [ContactController::class, 'store'])->name('contact.store');
-Route::post('/testimoni', [TestimonialController::class, 'store'])->name('testimonials.store');
+Route::post('/kontak', [ContactController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
+Route::post('/testimoni', [TestimonialController::class, 'store'])->middleware('throttle:5,1')->name('testimonials.store');
 
 Route::get('/bantuan', [PageController::class, 'help'])->name('help');
 
@@ -111,9 +111,14 @@ Route::post('/checkout', [CheckoutController::class, 'store'])
     ->middleware('auth');
 
 Route::get('/order/{code}', [OrderController::class, 'show'])
+    ->middleware('auth')
     ->name('order.show');
-Route::get('/order/{code}/print', [OrderController::class, 'print'])->name('order.print');
-Route::post('/order/{code}/cancel', [OrderController::class, 'cancel'])->name('order.cancel')->middleware('auth');
+Route::get('/order/{code}/print', [OrderController::class, 'print'])
+    ->middleware('auth')
+    ->name('order.print');
+Route::post('/order/{code}/cancel', [OrderController::class, 'cancel'])
+    ->middleware('auth')
+    ->name('order.cancel');
 
 
 
@@ -128,7 +133,6 @@ Route::prefix('shipping')->name('shipping.')->group(function () {
     Route::get('/couriers', [ShippingController::class, 'couriers'])->name('couriers');
     Route::post('/check', [ShippingController::class, 'check'])->name('check');
     Route::post('/track', [ShippingController::class, 'track'])->name('track');
-    Route::get('/debug', [ShippingController::class, 'debug'])->name('debug');
 });
 
 
@@ -169,8 +173,9 @@ use App\Http\Controllers\Admin\CategoryAdminController;
 use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\Admin\UserAdminController;
 use App\Http\Controllers\Admin\TestimonialAdminController;
+use App\Http\Controllers\Admin\ContactMessageAdminController;
 
-Route::prefix('custom-admin')->middleware('auth')->name('admin.')->group(function () {
+Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(function () {
     // Dashboard
     Route::get('/', function () {
         return view('admin.dashboard', [
@@ -221,5 +226,9 @@ Route::prefix('custom-admin')->middleware('auth')->name('admin.')->group(functio
     Route::get('/testimonials/{testimonial}/edit', [TestimonialAdminController::class, 'edit'])->name('testimonials.edit');
     Route::put('/testimonials/{testimonial}', [TestimonialAdminController::class, 'update'])->name('testimonials.update');
     Route::delete('/testimonials/{testimonial}', [TestimonialAdminController::class, 'destroy'])->name('testimonials.destroy');
+
+    // Messages
+    Route::get('/messages', [ContactMessageAdminController::class, 'index'])->name('messages.index');
+    Route::delete('/messages/{message}', [ContactMessageAdminController::class, 'destroy'])->name('messages.destroy');
 });
 

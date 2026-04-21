@@ -22,7 +22,7 @@
         window.__CHECKOUT_CONFIG__ = {
             subtotal: {{ (int) ($subtotal ?? 0) }},
             weight: {{ (int) ($weight ?? 1000) }},
-            originId: {{ (int) env('ORIGIN_DESTINATION_ID', 4816) }},
+            originId: {{ (int) config('services.komerce.origin_destination_id', 4816) }},
             csrf: @json(csrf_token()),
             urls: {
                 search: '/shipping/search',

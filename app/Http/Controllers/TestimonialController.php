@@ -15,14 +15,12 @@ class TestimonialController extends Controller
             'message' => ['required', 'string', 'max:600'],
         ]);
 
-        // Simpan testimonial
-        // Jika kamu ingin moderasi: set is_active = false
-        // Kalau mau langsung tampil di home: set true
+        // Simpan testimonial dengan is_active = false (perlu moderasi admin)
         Testimonial::create([
             'name'      => $data['name'],
             'rating'    => $data['rating'],
             'message'   => $data['message'],
-            'is_active' => true,
+            'is_active' => false,
         ]);
 
         return back()->with('toast', [

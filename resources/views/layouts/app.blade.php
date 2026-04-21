@@ -257,7 +257,7 @@
     </footer>
 
     {{-- Floating WhatsApp --}}
-    @php $wa = env('WHATSAPP_NUMBER','6281234567890'); @endphp
+    @php $wa = config('services.tsania.whatsapp_number', '6281234567890'); @endphp
     <a href="https://wa.me/{{ $wa }}?text={{ urlencode('Halo Tsania Craft, saya mau tanya produk.') }}"
         class="fixed bottom-5 right-5 z-50 btn-secondary flex items-center gap-2 shadow-hover"
         aria-label="Chat WhatsApp">

@@ -41,6 +41,12 @@ return [
     'cost_api_key' => env('KOMERCE_COST_API_KEY'),
     'tracking_api_key' => env('KOMERCE_TRACKING_API_KEY'),
     'base_url' => env('KOMERCE_BASE_URL', 'https://rajaongkir.komerce.id/api/v1'),
+    'origin_destination_id' => env('ORIGIN_DESTINATION_ID'),
+],
+
+'tsania' => [
+    'cod_city_whitelist' => env('COD_CITY_WHITELIST', ''),
+    'whatsapp_number' => env('WHATSAPP_NUMBER', ''),
 ],
 
 ];

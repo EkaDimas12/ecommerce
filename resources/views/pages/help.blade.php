@@ -257,7 +257,7 @@
                             </div>
                         </div>
 
-                        @php $wa = env('WHATSAPP_NUMBER','6281234567890'); @endphp
+                        @php $wa = config('services.tsania.whatsapp_number', '6281234567890'); @endphp
                         <div class="mt-5 flex flex-col gap-3">
                             <a class="btn-primary text-center"
                                 href="https://wa.me/{{ $wa }}?text={{ urlencode('Halo Tsania Craft, saya butuh bantuan.') }}">

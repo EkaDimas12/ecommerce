@@ -8,6 +8,8 @@ use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use App\Models\Product;
 
 class CheckoutController extends Controller
 {
@@ -22,25 +24,61 @@ class CheckoutController extends Controller
     {
         $raw = session('cart', []);
         $items = [];
+        $hasChanges = false;
 
-        foreach ($raw as $key => $item) {
-            $items[$key] = [
-                'product_id' => $item['product_id'] ?? ($item['id'] ?? $key),
-                'name'       => $item['name'] ?? 'Produk',
-                'price'      => (int)($item['price'] ?? 0),
-                'qty'        => max(1, (int)($item['qty'] ?? 1)),
-                'weight'     => (int)($item['weight'] ?? 200),
-                'image'      => $item['image'] ?? null,
-            ];
+        if (count($raw) > 0) {
+            $productIds = array_keys($raw);
+            $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+
+            foreach ($raw as $key => $item) {
+                // Skip if product deleted
+                if (!isset($products[$key])) {
+                    $hasChanges = true;
+                    continue;
+                }
+
+                $product = $products[$key];
+                $qty = max(1, (int)($item['qty'] ?? 1));
+
+                // Check stock
+                if ($product->stock !== null && $qty > $product->stock) {
+                    $qty = max(1, $product->stock);
+                    $hasChanges = true;
+                }
+
+                // Check price/name drift
+                if (($item['price'] ?? 0) != $product->price || ($item['name'] ?? '') !== $product->name) {
+                    $hasChanges = true;
+                }
+
+                $items[$key] = [
+                    'product_id' => $product->id,
+                    'name'       => $product->name,
+                    'price'      => (int) $product->price,
+                    'qty'        => $qty,
+                    'weight'     => 200,
+                    'image'      => $product->main_image,
+                ];
+            }
+
+            if ($hasChanges) {
+                session(['cart' => $items]);
+            }
         }
 
-        session(['cart' => $items]);
-        return $items;
+        return [$items, $hasChanges];
     }
 
     public function index()
     {
-        $items = $this->cartItems();
+        [$items, $hasChanges] = $this->cartItems();
+
+        if ($hasChanges) {
+            return redirect()->route('cart.index')->with('toast', [
+                'type' => 'warning',
+                'message' => 'Terdapat perubahan harga atau stok pada keranjang Anda. Silakan periksa kembali.',
+            ]);
+        }
 
         if (count($items) === 0) {
             return redirect()->route('cart.index')->with('toast', [
@@ -52,7 +90,7 @@ class CheckoutController extends Controller
         $subtotal = collect($items)->sum(fn ($i) => $i['price'] * $i['qty']);
         $weight   = collect($items)->sum(fn ($i) => $i['weight'] * $i['qty']);
 
-        $codWhitelist = collect(explode(',', env('COD_CITY_WHITELIST', '')))
+        $codWhitelist = collect(explode(',', config('services.tsania.cod_city_whitelist', '')))
             ->map(fn ($v) => trim($v))
             ->filter()
             ->values();
@@ -73,7 +111,14 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
-        $items = $this->cartItems();
+        [$items, $hasChanges] = $this->cartItems();
+
+        if ($hasChanges) {
+            return redirect()->route('cart.index')->with('toast', [
+                'type' => 'warning',
+                'message' => 'Terdapat perubahan harga atau stok. Silakan periksa kembali keranjang Anda.',
+            ]);
+        }
 
         if (count($items) === 0) {
             return redirect()->route('cart.index')->with('toast', [
@@ -105,7 +150,7 @@ class CheckoutController extends Controller
 
         // COD whitelist check (only for COD)
         if ($request->payment_method === 'cod') {
-            $whitelist = collect(explode(',', env('COD_CITY_WHITELIST', '')))
+            $whitelist = collect(explode(',', config('services.tsania.cod_city_whitelist', '')))
                 ->map(fn ($v) => strtoupper(trim($v)))
                 ->filter();
 
@@ -130,40 +175,51 @@ class CheckoutController extends Controller
         // Determine initial payment status
         $paymentStatus = $request->payment_method === 'cod' ? 'cod' : 'pending';
 
-        $order = Order::create([
-            'code'           => $code,
-            'customer_name'  => $request->customer_name,
-            'phone'          => $request->phone,
-            'email'          => $request->email,
+        // Wrap in transaction to ensure consistency
+        $order = DB::transaction(function () use ($request, $code, $isPickup, $shippingCost, $subtotal, $total, $paymentStatus, $items) {
+            $order = Order::create([
+                'code'           => $code,
+                'user_id'        => auth()->id(),
+                'customer_name'  => $request->customer_name,
+                'phone'          => $request->phone,
+                'email'          => $request->email,
 
-            'address'        => $request->address,
-            'city_id'        => (int)($request->destination_id ?? 0),
-            'postal_code'    => $request->postal_code,
+                'address'        => $request->address,
+                'city_id'        => (int)($request->destination_id ?? 0),
+                'postal_code'    => $request->postal_code,
 
-            'courier'        => $request->courier ?? 'pickup',
-            'service'        => $isPickup ? 'pickup' : $request->service,
-            'shipping_cost'  => $shippingCost,
+                'courier'        => $request->courier ?? 'pickup',
+                'service'        => $isPickup ? 'pickup' : $request->service,
+                'shipping_cost'  => $shippingCost,
 
-            'subtotal'       => $subtotal,
-            'total'          => $total,
+                'subtotal'       => $subtotal,
+                'total'          => $total,
 
-            'payment_method' => $request->payment_method,
-            'payment_status' => $paymentStatus,
-            'order_status'   => 'new',
-        ]);
-
-        foreach ($items as $it) {
-            OrderItem::create([
-                'order_id'       => $order->id,
-                'product_id'     => $it['product_id'],
-                'name_snapshot'  => $it['name'],
-                'price_snapshot' => $it['price'],
-                'qty'            => $it['qty'],
-                'subtotal'       => $it['price'] * $it['qty'],
+                'payment_method' => $request->payment_method,
+                'payment_status' => $paymentStatus,
+                'order_status'   => 'new',
             ]);
-        }
 
-        // Clear cart
+            foreach ($items as $it) {
+                OrderItem::create([
+                    'order_id'       => $order->id,
+                    'product_id'     => $it['product_id'],
+                    'name_snapshot'  => $it['name'],
+                    'price_snapshot' => $it['price'],
+                    'qty'            => $it['qty'],
+                    'subtotal'       => $it['price'] * $it['qty'],
+                ]);
+
+                // Kurangi stok produk
+                Product::where('id', $it['product_id'])
+                    ->whereNotNull('stock')
+                    ->decrement('stock', $it['qty']);
+            }
+
+            return $order;
+        });
+
+        // Clear cart ONLY IF transaction is successful
         session()->forget('cart');
 
         // If online payment (transfer/midtrans), return snap token for frontend

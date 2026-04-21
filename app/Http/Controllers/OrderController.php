@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Product;
 use App\Services\MidtransService;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -19,6 +21,11 @@ class OrderController extends Controller
         $order = Order::with('items')
             ->where('code', $code)
             ->firstOrFail();
+
+        // Verify ownership: user must own the order or be admin
+        if ($order->user_id !== auth()->id() && !auth()->user()->is_admin) {
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
+        }
 
         // Check if order needs payment (online payment with pending status)
         $needsPayment = $order->payment_method === 'transfer' && $order->payment_status === 'pending';
@@ -72,6 +79,11 @@ class OrderController extends Controller
             ->where('code', $code)
             ->firstOrFail();
 
+        // Verify ownership: user must own the order or be admin
+        if ($order->user_id !== auth()->id() && !auth()->user()->is_admin) {
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
+        }
+
         return view('order.print', compact('order'));
     }
 
@@ -80,7 +92,7 @@ class OrderController extends Controller
      */
     public function history()
     {
-        $orders = Order::where('email', '=', auth()->user()->email)
+        $orders = Order::where('user_id', '=', auth()->id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -95,7 +107,7 @@ class OrderController extends Controller
         $order = Order::where('code', '=', $code)->firstOrFail();
 
         // Check if user owns this order
-        if (auth()->user()->email !== $order->email) {
+        if ($order->user_id !== auth()->id()) {
             return back()->with('toast', [
                 'type' => 'danger',
                 'message' => 'Anda tidak memiliki akses untuk membatalkan pesanan ini.',
@@ -111,10 +123,19 @@ class OrderController extends Controller
             ]);
         }
 
-        $order->update([
-            'order_status' => 'cancelled',
-            'payment_status' => 'failed',
-        ]);
+        DB::transaction(function () use ($order) {
+            $order->update([
+                'order_status' => 'cancelled',
+                'payment_status' => 'failed',
+            ]);
+
+            // Kembalikan stok
+            foreach ($order->items as $item) {
+                Product::where('id', $item->product_id)
+                    ->whereNotNull('stock')
+                    ->increment('stock', $item->qty);
+            }
+        });
 
         return back()->with('toast', [
             'type' => 'success',
