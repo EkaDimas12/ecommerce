@@ -174,6 +174,7 @@ use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\Admin\UserAdminController;
 use App\Http\Controllers\Admin\TestimonialAdminController;
 use App\Http\Controllers\Admin\ContactMessageAdminController;
+use App\Http\Controllers\Admin\TransactionLogAdminController;
 
 Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(function () {
     // Dashboard
@@ -210,6 +211,11 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
     Route::get('/orders/{order}/edit', [OrderAdminController::class, 'edit'])->name('orders.edit');
     Route::put('/orders/{order}', [OrderAdminController::class, 'update'])->name('orders.update');
     Route::delete('/orders/{order}', [OrderAdminController::class, 'destroy'])->name('orders.destroy');
+
+    // Transaction Logs
+    Route::get('/transaction-logs', [TransactionLogAdminController::class, 'index'])->name('transaction-logs.index');
+    Route::get('/transaction-logs/export', [TransactionLogAdminController::class, 'export'])->name('transaction-logs.export');
+    Route::get('/transaction-logs/{log}', [TransactionLogAdminController::class, 'show'])->name('transaction-logs.show');
 
     // Users
     Route::get('/users', [UserAdminController::class, 'index'])->name('users.index');

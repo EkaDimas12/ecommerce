@@ -3,127 +3,175 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\TransactionLog;
+use App\Services\MidtransService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Midtrans\Config as MidtransConfig;
-use Midtrans\Notification;
 
 class MidtransController extends Controller
 {
+    protected MidtransService $midtrans;
+
+    public function __construct(MidtransService $midtrans)
+    {
+        $this->midtrans = $midtrans;
+    }
+
     /**
-     * Midtrans webhook (payment notification)
-     * URL: POST /midtrans/notification
-     * - WAJIB dikecualikan dari CSRF di VerifyCsrfToken
-     * - WAJIB set di Midtrans Dashboard (Payment Notification URL)
+     * Midtrans webhook (payment notification).
+     *
+     * URL : POST /midtrans/notification
+     * CSRF: Dikecualikan di VerifyCsrfToken
+     * Setup: Set URL ini di Midtrans Dashboard → Settings → Payment Notification URL
      */
     public function notification(Request $request)
     {
-        // Pastikan config Midtrans terbaca
-        $serverKey = trim((string) config('services.midtrans.server_key'));
-        $isProduction = filter_var(config('services.midtrans.is_production'), FILTER_VALIDATE_BOOLEAN);
+        $payload      = $request->all();
+        $orderId      = $payload['order_id']      ?? null;
+        $statusCode   = $payload['status_code']   ?? null;
+        $grossAmount  = $payload['gross_amount']   ?? null;
+        $signatureKey = $payload['signature_key']  ?? null;
 
-        if (!$serverKey) {
-            Log::error('Midtrans server key missing');
-            return response()->json(['ok' => false, 'message' => 'Server key missing'], 500);
-        }
-
-        MidtransConfig::$serverKey = $serverKey;
-        MidtransConfig::$isProduction = $isProduction;
-        MidtransConfig::$isSanitized = true;
-        MidtransConfig::$is3ds = true;
-
-        // --- Security: verify signature key (recommended) ---
-        // Midtrans signature formula:
-        // sha512(order_id + status_code + gross_amount + serverKey)
-        $payload = $request->all();
-        $orderId = $payload['order_id'] ?? null;
-        $statusCode = $payload['status_code'] ?? null;
-        $grossAmount = $payload['gross_amount'] ?? null;
-        $signatureKey = $payload['signature_key'] ?? null;
-
+        // --- Validate required fields ---
         if (!$orderId || !$statusCode || !$grossAmount || !$signatureKey) {
-            Log::warning('Midtrans notification missing required fields', $payload);
+            Log::warning('Midtrans webhook: missing required fields', [
+                'ip'      => $request->ip(),
+                'payload' => array_keys($payload),
+            ]);
             return response()->json(['ok' => false, 'message' => 'Invalid payload'], 400);
         }
 
-        $computedSignature = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
-
-        if (!hash_equals($computedSignature, $signatureKey)) {
-            Log::warning('Midtrans signature mismatch', [
+        // --- Verify signature (timing-safe) ---
+        if (!$this->midtrans->verifySignature($orderId, $statusCode, $grossAmount, $signatureKey)) {
+            Log::warning('Midtrans webhook: signature mismatch', [
                 'order_id' => $orderId,
-                'expected' => $computedSignature,
-                'got' => $signatureKey
+                'ip'       => $request->ip(),
             ]);
-            return response()->json(['ok' => false, 'message' => 'Signature mismatch'], 401);
+            return response()->json(['ok' => false, 'message' => 'Signature mismatch'], 403);
         }
 
-        // Use Midtrans Notification object to normalize data
-        $notif = new Notification();
-
-        $transactionStatus = $notif->transaction_status ?? null; // settlement, pending, deny, cancel, expire, capture
-        $fraudStatus = $notif->fraud_status ?? null;             // accept, challenge
-        $paymentType = $notif->payment_type ?? null;
-
-        // Cari order berdasarkan code (kita pakai order->code sebagai order_id Midtrans)
+        // --- Find order ---
         $order = Order::where('code', $orderId)->first();
         if (!$order) {
-            Log::warning('Order not found for Midtrans notification', ['order_id' => $orderId]);
+            Log::warning('Midtrans webhook: order not found', ['order_id' => $orderId]);
             return response()->json(['ok' => false, 'message' => 'Order not found'], 404);
         }
 
-        // Mapping status Midtrans -> status internal
-        // - settlement / capture(accept) => paid
-        // - pending => pending
-        // - deny/cancel/expire => failed/cancelled
-        if ($transactionStatus === 'capture') {
-            if ($fraudStatus === 'challenge') {
-                $order->payment_status = 'pending';
-            } else {
-                $order->payment_status = 'paid';
-                $order->order_status = 'processing';
-            }
-        } elseif ($transactionStatus === 'settlement') {
-            $order->payment_status = 'paid';
-            $order->order_status = 'processing';
-        } elseif ($transactionStatus === 'pending') {
-            $order->payment_status = 'pending';
-        } elseif (in_array($transactionStatus, ['deny', 'cancel', 'expire'], true)) {
-            $order->payment_status = 'failed';
-            $order->order_status = 'cancelled';
-        } else {
-            // fallback: keep as pending
-            $order->payment_status = $order->payment_status ?: 'pending';
+        // --- Idempotency: skip if already in terminal state ---
+        if (in_array($order->payment_status, ['paid', 'refunded'], true)) {
+            Log::info('Midtrans webhook: order already settled, skipping', [
+                'order_id'       => $orderId,
+                'payment_status' => $order->payment_status,
+            ]);
+            return response()->json(['ok' => true, 'message' => 'Already processed']);
         }
 
-        // (Opsional) kalau kamu punya kolom payment_type di orders, simpan di sini
-        // $order->payment_type = $paymentType;
+        // --- Resolve new status ---
+        $transactionStatus = $payload['transaction_status'] ?? 'pending';
+        $fraudStatus       = $payload['fraud_status']       ?? 'accept';
+        $paymentType       = $payload['payment_type']       ?? null;
+        $newPaymentStatus  = $this->midtrans->resolvePaymentStatus($transactionStatus, $fraudStatus);
 
-        $order->save();
+        // --- Determine event name ---
+        $event = match ($newPaymentStatus) {
+            'paid'     => 'payment_success',
+            'failed'   => in_array($transactionStatus, ['expire'], true) ? 'payment_expired' : 'payment_failed',
+            default    => 'payment_pending',
+        };
 
-        Log::info('Midtrans notification processed', [
-            'order_id' => $orderId,
+        // --- Snapshot before ---
+        $prevPaymentStatus = $order->payment_status;
+        $prevOrderStatus   = $order->order_status;
+
+        // --- Update order within transaction ---
+        DB::transaction(function () use ($order, $newPaymentStatus, $transactionStatus, $event, $prevPaymentStatus, $prevOrderStatus, $paymentType, $payload, $request) {
+            $order->payment_status = $newPaymentStatus;
+
+            if ($newPaymentStatus === 'paid') {
+                $order->order_status = 'processing';
+            } elseif ($newPaymentStatus === 'failed') {
+                $order->order_status = 'cancelled';
+
+                // Kembalikan stok HANYA jika sebelumnya belum cancelled
+                if ($prevPaymentStatus !== 'failed') {
+                    $this->restoreStock($order);
+                }
+            }
+            // pending → tetap status sebelumnya
+
+            $order->save();
+
+            // --- Log transaksi ---
+            TransactionLog::record($order, $event, 'midtrans_webhook', [
+                'payment_type'        => $paymentType,
+                'transaction_status'  => $transactionStatus,
+                'payment_status_from' => $prevPaymentStatus,
+                'payment_status_to'   => $order->payment_status,
+                'order_status_from'   => $prevOrderStatus,
+                'order_status_to'     => $order->order_status,
+                'ip_address'          => $request->ip(),
+                'metadata'            => [
+                    'status_code'   => $payload['status_code'] ?? null,
+                    'fraud_status'  => $payload['fraud_status'] ?? null,
+                    'payment_type'  => $paymentType,
+                    'transaction_id' => $payload['transaction_id'] ?? null,
+                ],
+            ]);
+        });
+
+        Log::info('Midtrans webhook: processed', [
+            'order_id'           => $orderId,
             'transaction_status' => $transactionStatus,
-            'fraud_status' => $fraudStatus,
-            'payment_type' => $paymentType,
-            'payment_status_saved' => $order->payment_status,
-            'order_status_saved' => $order->order_status,
+            'fraud_status'       => $fraudStatus,
+            'payment_type'       => $paymentType,
+            'payment_status'     => $order->payment_status,
+            'order_status'       => $order->order_status,
         ]);
 
         return response()->json(['ok' => true]);
     }
 
     /**
-     * Redirect after payment finish
+     * Restore product stock when payment fails / expires / cancelled.
+     */
+    private function restoreStock(Order $order): void
+    {
+        $order->loadMissing('items');
+
+        foreach ($order->items as $item) {
+            Product::where('id', $item->product_id)
+                ->whereNotNull('stock')
+                ->increment('stock', $item->qty);
+        }
+
+        // Log stock restoration
+        TransactionLog::record($order, 'stock_restored', 'midtrans_webhook', [
+            'metadata' => [
+                'items' => $order->items->map(fn ($i) => [
+                    'product_id' => $i->product_id,
+                    'qty'        => $i->qty,
+                ])->toArray(),
+            ],
+        ]);
+
+        Log::info('Midtrans: stock restored for cancelled order', [
+            'order_code' => $order->code,
+        ]);
+    }
+
+    /**
+     * Redirect after payment finish (user completed payment).
      * GET /payment/finish?order_id=TC-XXXX
      */
     public function finish(Request $request)
     {
-        // Midtrans usually includes order_id in query (or you append it yourself)
         $orderId = $request->query('order_id');
 
         if (!$orderId) {
             return redirect()->route('home')->with('toast', [
-                'type' => 'success',
+                'type'    => 'success',
                 'message' => 'Pembayaran selesai.',
             ]);
         }
@@ -132,23 +180,43 @@ class MidtransController extends Controller
     }
 
     /**
-     * Redirect if user closes popup / payment not finished
+     * Redirect if user closes popup / payment not finished.
+     * GET /payment/unfinish
      */
-    public function unfinish()
+    public function unfinish(Request $request)
     {
-        return redirect()->route('cart.index')->with('toast', [
-            'type' => 'danger',
+        $orderId = $request->query('order_id');
+
+        if ($orderId) {
+            return redirect()->route('order.show', $orderId)->with('toast', [
+                'type'    => 'warning',
+                'message' => 'Pembayaran belum selesai. Anda bisa melanjutkan pembayaran dari halaman pesanan.',
+            ]);
+        }
+
+        return redirect()->route('orders.history')->with('toast', [
+            'type'    => 'warning',
             'message' => 'Pembayaran belum selesai.',
         ]);
     }
 
     /**
-     * Redirect if payment error
+     * Redirect if payment error.
+     * GET /payment/error
      */
-    public function error()
+    public function error(Request $request)
     {
-        return redirect()->route('cart.index')->with('toast', [
-            'type' => 'danger',
+        $orderId = $request->query('order_id');
+
+        if ($orderId) {
+            return redirect()->route('order.show', $orderId)->with('toast', [
+                'type'    => 'danger',
+                'message' => 'Terjadi kesalahan pembayaran. Silakan coba lagi.',
+            ]);
+        }
+
+        return redirect()->route('orders.history')->with('toast', [
+            'type'    => 'danger',
             'message' => 'Terjadi kesalahan pembayaran. Silakan coba lagi.',
         ]);
     }

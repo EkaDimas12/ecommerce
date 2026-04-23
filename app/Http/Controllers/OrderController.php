@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\TransactionLog;
 use App\Services\MidtransService;
 use Illuminate\Support\Facades\DB;
 
@@ -123,7 +124,10 @@ class OrderController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($order) {
+        $prevPaymentStatus = $order->payment_status;
+        $prevOrderStatus   = $order->order_status;
+
+        DB::transaction(function () use ($order, $prevPaymentStatus, $prevOrderStatus) {
             $order->update([
                 'order_status' => 'cancelled',
                 'payment_status' => 'failed',
@@ -135,6 +139,14 @@ class OrderController extends Controller
                     ->whereNotNull('stock')
                     ->increment('stock', $item->qty);
             }
+
+            // Log transaksi
+            TransactionLog::record($order, 'cancelled', 'user_cancel', [
+                'payment_status_from' => $prevPaymentStatus,
+                'payment_status_to'   => 'failed',
+                'order_status_from'   => $prevOrderStatus,
+                'order_status_to'     => 'cancelled',
+            ]);
         });
 
         return back()->with('toast', [

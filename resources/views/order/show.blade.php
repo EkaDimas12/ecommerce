@@ -109,11 +109,13 @@
         </div>
     </section>
 
-    {{-- Midtrans Snap JS (hanya jika ada token) --}}
     @if (isset($needsPayment) && $needsPayment && isset($snapToken) && isset($midtransSnapUrl))
         <script src="{{ $midtransSnapUrl }}" data-client-key="{{ $midtransClientKey }}"></script>
         <script>
             document.getElementById('pay-button').addEventListener('click', function() {
+                this.disabled = true;
+                this.textContent = '⏳ Memproses...';
+
                 snap.pay('{{ $snapToken }}', {
                     onSuccess: function(result) {
                         console.log('Payment success:', result);
@@ -126,10 +128,17 @@
                     },
                     onError: function(result) {
                         console.log('Payment error:', result);
-                        alert('Pembayaran gagal. Silakan coba lagi.');
+                        window.location.href =
+                            '{{ route('payment.error') }}?order_id={{ $order->code }}';
                     },
                     onClose: function() {
                         console.log('Payment popup closed');
+                        // Re-enable button
+                        var btn = document.getElementById('pay-button');
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.textContent = '💳 Bayar Sekarang';
+                        }
                     }
                 });
             });

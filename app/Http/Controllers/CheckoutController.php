@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\TransactionLog;
 use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -221,6 +222,20 @@ class CheckoutController extends Controller
 
         // Clear cart ONLY IF transaction is successful
         session()->forget('cart');
+
+        // Log transaksi: pesanan baru dibuat
+        TransactionLog::record($order, 'created', 'checkout', [
+            'payment_type'       => $request->payment_method,
+            'payment_status_to'  => $paymentStatus,
+            'order_status_to'    => 'new',
+            'metadata'           => [
+                'payment_method' => $request->payment_method,
+                'subtotal'       => $subtotal,
+                'shipping_cost'  => $shippingCost,
+                'total'          => $total,
+                'item_count'     => count($items),
+            ],
+        ]);
 
         // If online payment (transfer/midtrans), return snap token for frontend
         if ($request->payment_method === 'transfer') {

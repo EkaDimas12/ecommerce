@@ -56,6 +56,9 @@
     <script src="{{ $midtransSnapUrl }}" data-client-key="{{ $midtransClientKey }}"></script>
     <script>
         document.getElementById('pay-button').addEventListener('click', function() {
+            this.disabled = true;
+            this.textContent = '⏳ Memproses...';
+
             snap.pay('{{ $snapToken }}', {
                 onSuccess: function(result) {
                     console.log('Payment success:', result);
@@ -67,13 +70,10 @@
                 },
                 onError: function(result) {
                     console.log('Payment error:', result);
-                    window.location.href = '{{ route('payment.error') }}';
+                    window.location.href = '{{ route('payment.error') }}?order_id={{ $order->code }}';
                 },
                 onClose: function() {
                     console.log('Payment popup closed');
-                    // User closed the popup without completing payment
-                    alert(
-                        'Pembayaran belum selesai. Silakan lanjutkan pembayaran dari halaman pesanan Anda.');
                     window.location.href = '{{ route('order.show', $order->code) }}';
                 }
             });

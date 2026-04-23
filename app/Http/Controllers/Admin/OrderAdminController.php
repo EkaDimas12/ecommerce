@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\TransactionLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -59,7 +60,10 @@ class OrderAdminController extends Controller
         $wasNotCancelled = $order->order_status !== 'cancelled';
         $willBeCancelled = $request->order_status === 'cancelled';
 
-        DB::transaction(function () use ($order, $request, $wasNotCancelled, $willBeCancelled) {
+        $prevPaymentStatus = $order->payment_status;
+        $prevOrderStatus   = $order->order_status;
+
+        DB::transaction(function () use ($order, $request, $wasNotCancelled, $willBeCancelled, $prevPaymentStatus, $prevOrderStatus) {
             $order->update([
                 'payment_status' => $request->payment_status,
                 'order_status' => $request->order_status,
@@ -74,6 +78,20 @@ class OrderAdminController extends Controller
                         ->whereNotNull('stock')
                         ->increment('stock', $item->qty);
                 }
+            }
+
+            // Log transaksi jika ada perubahan status
+            if ($prevPaymentStatus !== $request->payment_status || $prevOrderStatus !== $request->order_status) {
+                TransactionLog::record($order, 'status_changed', 'admin', [
+                    'payment_status_from' => $prevPaymentStatus,
+                    'payment_status_to'   => $request->payment_status,
+                    'order_status_from'   => $prevOrderStatus,
+                    'order_status_to'     => $request->order_status,
+                    'metadata'            => [
+                        'updated_by'      => auth()->user()->name ?? 'admin',
+                        'tracking_number' => $request->tracking_number,
+                    ],
+                ]);
             }
         });
 
