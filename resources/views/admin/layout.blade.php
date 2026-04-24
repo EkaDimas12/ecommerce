@@ -206,6 +206,112 @@
             </div>
         </main>
     </div>
+
+    {{-- ─── CUSTOM CONFIRM MODAL ─── --}}
+    <div id="confirmModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+        {{-- Backdrop --}}
+        <div id="confirmBackdrop" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
+        {{-- Dialog --}}
+        <div id="confirmDialog" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-[400px] overflow-hidden transform transition-all duration-300 scale-95 opacity-0">
+            {{-- Top accent --}}
+            <div class="h-1 bg-gradient-to-r from-red-500 via-rose-500 to-pink-500"></div>
+            <div class="p-6">
+                {{-- Icon --}}
+                <div class="mx-auto w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mb-4 ring-4 ring-red-100/60">
+                    <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                    </svg>
+                </div>
+                {{-- Title --}}
+                <h3 id="confirmTitle" class="text-lg font-bold text-slate-800 text-center mb-1">Konfirmasi Hapus</h3>
+                {{-- Message --}}
+                <p id="confirmMessage" class="text-sm text-slate-500 text-center leading-relaxed">Apakah Anda yakin? Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+            {{-- Actions --}}
+            <div class="flex gap-3 px-6 pb-6">
+                <button id="confirmCancel" type="button"
+                    class="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300">
+                    Batal
+                </button>
+                <button id="confirmOk" type="button"
+                    class="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-red-500/25 focus:outline-none focus:ring-2 focus:ring-red-400">
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Custom Confirm Modal
+         * Usage: Add data-confirm="message" to any <form> tag.
+         */
+        (function() {
+            const modal     = document.getElementById('confirmModal');
+            const backdrop  = document.getElementById('confirmBackdrop');
+            const dialog    = document.getElementById('confirmDialog');
+            const titleEl   = document.getElementById('confirmTitle');
+            const msgEl     = document.getElementById('confirmMessage');
+            const btnCancel = document.getElementById('confirmCancel');
+            const btnOk     = document.getElementById('confirmOk');
+            let pendingForm = null;
+
+            function openModal(title, message) {
+                titleEl.textContent = title || 'Konfirmasi Hapus';
+                msgEl.textContent   = message || 'Apakah Anda yakin? Tindakan ini tidak dapat dibatalkan.';
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                requestAnimationFrame(() => {
+                    backdrop.classList.remove('opacity-0');
+                    backdrop.classList.add('opacity-100');
+                    dialog.classList.remove('scale-95', 'opacity-0');
+                    dialog.classList.add('scale-100', 'opacity-100');
+                });
+            }
+
+            function closeModal() {
+                backdrop.classList.remove('opacity-100');
+                backdrop.classList.add('opacity-0');
+                dialog.classList.remove('scale-100', 'opacity-100');
+                dialog.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    modal.classList.remove('flex');
+                    modal.classList.add('hidden');
+                    pendingForm = null;
+                }, 300);
+            }
+
+            // Intercept all forms with data-confirm
+            document.addEventListener('submit', function(e) {
+                const form = e.target.closest('form[data-confirm]');
+                if (!form) return;
+                if (form.dataset._confirmed === 'true') {
+                    form.dataset._confirmed = '';
+                    return; // allow submit
+                }
+                e.preventDefault();
+                pendingForm = form;
+                openModal(form.dataset.confirmTitle, form.dataset.confirm);
+            });
+
+            btnOk.addEventListener('click', function() {
+                if (pendingForm) {
+                    pendingForm.dataset._confirmed = 'true';
+                    pendingForm.requestSubmit();
+                }
+                closeModal();
+            });
+
+            btnCancel.addEventListener('click', closeModal);
+            backdrop.addEventListener('click', closeModal);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
 </body>
 
 </html>

@@ -31,7 +31,8 @@
                             <a href="{{ route('admin.categories.edit', $category) }}"
                                 class="text-blue-600 hover:underline">Edit</a>
                             <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="inline"
-                                onsubmit="return confirm('Yakin hapus kategori ini?')">
+                                data-confirm="Yakin hapus kategori ini? Semua produk dalam kategori ini akan kehilangan kategorinya."
+                                data-confirm-title="Hapus Kategori">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:underline">Hapus</button>

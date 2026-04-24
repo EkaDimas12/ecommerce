@@ -297,6 +297,83 @@
         });
     </script>
 
+    {{-- ─── CUSTOM CONFIRM MODAL (Public) ─── --}}
+    <div id="confirmModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; padding:16px;">
+        <div id="confirmBackdrop" style="position:absolute; inset:0; background:rgba(43,15,22,0.5); backdrop-filter:blur(4px); transition:opacity 0.3s; opacity:0;"></div>
+        <div id="confirmDialog" style="position:relative; background:white; border-radius:20px; width:100%; max-width:400px; overflow:hidden; box-shadow:0 25px 60px rgba(43,15,22,0.25); transform:scale(0.95); opacity:0; transition:all 0.3s;">
+            <div style="height:4px; background:linear-gradient(90deg, #DC2626, #E11D48, #F43F5E);"></div>
+            <div style="padding:24px;">
+                <div style="margin:0 auto; width:56px; height:56px; background:#FEF2F2; border-radius:16px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; box-shadow:0 0 0 6px rgba(254,226,226,0.6);">
+                    <svg style="width:28px; height:28px; color:#EF4444;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                    </svg>
+                </div>
+                <h3 id="confirmTitle" style="font-size:18px; font-weight:800; color:#2b0f16; text-align:center; margin:0 0 4px;">Konfirmasi Pembatalan</h3>
+                <p id="confirmMessage" style="font-size:14px; color:rgba(43,15,22,0.6); text-align:center; line-height:1.6; margin:0;">Apakah Anda yakin?</p>
+            </div>
+            <div style="display:flex; gap:12px; padding:0 24px 24px;">
+                <button id="confirmCancel" type="button"
+                    style="flex:1; padding:10px 16px; background:#F1F5F9; border:none; color:#475569; font-size:14px; font-weight:600; border-radius:12px; cursor:pointer; transition:background 0.2s;"
+                    onmouseover="this.style.background='#E2E8F0'" onmouseout="this.style.background='#F1F5F9'">
+                    Batal
+                </button>
+                <button id="confirmOk" type="button"
+                    style="flex:1; padding:10px 16px; background:linear-gradient(135deg,#DC2626,#E11D48); border:none; color:white; font-size:14px; font-weight:600; border-radius:12px; cursor:pointer; box-shadow:0 4px 12px rgba(220,38,38,0.3); transition:opacity 0.2s;"
+                    onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    Ya, Batalkan
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function() {
+        const modal = document.getElementById('confirmModal');
+        if (!modal) return;
+        const backdrop = document.getElementById('confirmBackdrop');
+        const dialog = document.getElementById('confirmDialog');
+        const titleEl = document.getElementById('confirmTitle');
+        const msgEl = document.getElementById('confirmMessage');
+        const btnCancel = document.getElementById('confirmCancel');
+        const btnOk = document.getElementById('confirmOk');
+        let pendingForm = null;
+
+        function openModal(msg) {
+            msgEl.textContent = msg || 'Apakah Anda yakin?';
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => {
+                backdrop.style.opacity = '1';
+                dialog.style.transform = 'scale(1)';
+                dialog.style.opacity = '1';
+            });
+        }
+        function closeModal() {
+            backdrop.style.opacity = '0';
+            dialog.style.transform = 'scale(0.95)';
+            dialog.style.opacity = '0';
+            setTimeout(() => { modal.style.display = 'none'; pendingForm = null; }, 300);
+        }
+
+        document.addEventListener('submit', function(e) {
+            const form = e.target.closest('.confirm-cancel-form');
+            if (!form) return;
+            if (form.dataset._confirmed === 'true') { form.dataset._confirmed = ''; return; }
+            e.preventDefault();
+            pendingForm = form;
+            openModal(form.dataset.confirmMsg);
+        });
+
+        btnOk.addEventListener('click', function() {
+            if (pendingForm) { pendingForm.dataset._confirmed = 'true'; pendingForm.requestSubmit(); }
+            closeModal();
+        });
+        btnCancel.addEventListener('click', closeModal);
+        backdrop.addEventListener('click', closeModal);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+        });
+    })();
+    </script>
+
 </body>
 
 </html>

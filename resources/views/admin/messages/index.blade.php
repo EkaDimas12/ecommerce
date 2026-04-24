@@ -34,7 +34,9 @@
                         </div>
                     </td>
                     <td class="p-3 align-top text-right">
-                        <form method="POST" action="{{ route('admin.messages.destroy', $msg->id) }}" onsubmit="return confirm('Hapus pesan ini?')">
+                        <form method="POST" action="{{ route('admin.messages.destroy', $msg->id) }}"
+                            data-confirm="Hapus pesan ini? Pesan dari {{ $msg->name }} akan dihapus permanen."
+                            data-confirm-title="Hapus Pesan">
                             @csrf
                             @method('DELETE')
                             <button class="text-red-500 hover:text-red-700 font-medium">Hapus</button>

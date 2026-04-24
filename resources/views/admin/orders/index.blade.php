@@ -131,7 +131,8 @@
                                     </a>
                                     {{-- Delete --}}
                                     <form action="{{ route('admin.orders.destroy', $order) }}" method="POST"
-                                        onsubmit="return confirm('Yakin ingin menghapus pesanan {{ $order->code }}?')">
+                                        data-confirm="Yakin ingin menghapus pesanan {{ $order->code }}? Data pesanan akan dihapus permanen."
+                                        data-confirm-title="Hapus Pesanan">
                                         @csrf @method('DELETE')
                                         <button type="submit"
                                             class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"

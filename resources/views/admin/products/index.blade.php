@@ -50,7 +50,8 @@
                             <a href="{{ route('admin.products.edit', $product) }}"
                                 class="text-blue-600 hover:underline">Edit</a>
                             <form action="{{ route('admin.products.destroy', $product) }}" method="POST" class="inline"
-                                onsubmit="return confirm('Yakin hapus produk ini?')">
+                                data-confirm="Yakin hapus produk ini? Data produk akan dihapus permanen."
+                                data-confirm-title="Hapus Produk">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:underline">Hapus</button>

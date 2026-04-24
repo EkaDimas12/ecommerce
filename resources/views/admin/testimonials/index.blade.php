@@ -48,7 +48,9 @@
                             <a href="{{ route('admin.testimonials.edit', $testimonial) }}"
                                 class="text-indigo-600 hover:underline">Edit</a>
                             <form action="{{ route('admin.testimonials.destroy', $testimonial) }}" method="POST"
-                                class="inline" onsubmit="return confirm('Yakin hapus testimoni ini?')">
+                                class="inline"
+                                data-confirm="Yakin hapus testimoni ini? Testimoni tidak akan tampil lagi di website."
+                                data-confirm-title="Hapus Testimoni">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:underline">Hapus</button>

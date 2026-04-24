@@ -43,7 +43,8 @@
                                 class="text-indigo-600 hover:underline">Edit</a>
                             @if ($user->id !== auth()->id())
                                 <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline"
-                                    onsubmit="return confirm('Yakin hapus user ini?')">
+                                    data-confirm="Yakin hapus user ini? Akun dan semua data terkait akan dihapus permanen."
+                                    data-confirm-title="Hapus User">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:underline">Hapus</button>

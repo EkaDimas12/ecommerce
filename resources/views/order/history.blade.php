@@ -74,7 +74,8 @@
                             {{-- Tombol Batalkan (hanya untuk order baru yang belum diproses) --}}
                             @if ($order->order_status === 'new' && in_array($order->payment_status, ['pending', 'cod']))
                                 <form action="{{ route('order.cancel', $order->code) }}" method="POST"
-                                    onsubmit="return confirm('Yakin ingin membatalkan pesanan {{ $order->code }}?');">
+                                    class="confirm-cancel-form"
+                                    data-confirm-msg="Yakin ingin membatalkan pesanan {{ $order->code }}?">
                                     @csrf
                                     <button type="submit"
                                         style="padding: 10px 20px; background: #FEE2E2; color: #DC2626; font-weight: 600; font-size: 14px; border-radius: 12px; border: 1px solid #FECACA; cursor: pointer;">
