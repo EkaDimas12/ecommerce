@@ -15,10 +15,17 @@ class Product extends Model {
     return $this->belongsTo(Category::class);
   }
 
+  /**
+   * Relasi ke model ProductReview.
+   * Mengambil daftar ulasan untuk produk ini.
+   */
   public function reviews() {
     return $this->hasMany(ProductReview::class);
   }
 
+  /**
+   * Mengambil rata-rata rating (bintang) berdasarkan ulasan pengguna.
+   */
   public function getAverageRatingAttribute() {
     return $this->reviews()->avg('rating') ?? 0;
   }

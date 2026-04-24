@@ -189,30 +189,33 @@ class CheckoutController extends Controller
         $subtotal = collect($items)->sum(fn ($i) => $i['price'] * $i['qty']);
         $total = $subtotal + $shippingCost;
 
-        // Apply coupon if exists in session
+        // Terapkan kupon diskon jika terdapat sesi kupon yang aktif
         $coupon = session('coupon');
         $discountAmount = 0;
         $couponCode = null;
 
         if ($coupon) {
-            // Re-validate coupon
+            // Validasi ulang kupon langsung dari database untuk memastikan belum kedaluwarsa atau habis limitnya saat checkout
             $dbCoupon = \App\Models\Coupon::where('code', $coupon->code)->where('is_active', true)->first();
             if ($dbCoupon && (!$dbCoupon->expires_at || !$dbCoupon->expires_at->isPast()) && ($dbCoupon->usage_limit === null || $dbCoupon->used_count < $dbCoupon->usage_limit) && $subtotal >= $dbCoupon->min_purchase) {
                 
+                // Hitung potongan harga berdasarkan tipe kupon (Nominal Tetap / Persentase)
                 if ($dbCoupon->type === 'fixed') {
                     $discountAmount = $dbCoupon->value;
                 } else {
                     $discountAmount = $subtotal * ($dbCoupon->value / 100);
+                    // Batasi jumlah diskon jika kupon persentase memiliki limit maksimal potongan
                     if ($dbCoupon->max_discount !== null && $discountAmount > $dbCoupon->max_discount) {
                         $discountAmount = $dbCoupon->max_discount;
                     }
                 }
                 
-                // Ensure discount does not exceed subtotal
+                // Pastikan nilai diskon tidak melebihi harga subtotal belanjaan
                 if ($discountAmount > $subtotal) {
                     $discountAmount = $subtotal;
                 }
 
+                // Kalkulasi total tagihan akhir setelah dikurangi diskon
                 $total = $subtotal - $discountAmount + $shippingCost;
                 $couponCode = $dbCoupon->code;
             }

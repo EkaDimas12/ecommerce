@@ -45,6 +45,10 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    /**
+     * Relasi ke model ProductReview.
+     * Mengambil daftar ulasan produk yang telah ditulis oleh pengguna (user) ini.
+     */
     public function reviews()
     {
         return $this->hasMany(ProductReview::class);

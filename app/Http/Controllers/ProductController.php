@@ -83,13 +83,16 @@ class ProductController extends Controller
 
         $canReview = false;
         if (auth()->check()) {
+            // Cek kelayakan user untuk memberikan review
+            // User hanya boleh mereview jika sudah pernah membeli produk ini dan pesanannya sudah sampai/selesai
             $canReview = \App\Models\Order::where('user_id', auth()->id())
                 ->whereIn('order_status', ['shipped', 'delivered', 'completed'])
                 ->whereHas('items', function ($query) use ($product) {
                     $query->where('product_id', $product->id);
                 })->exists();
                 
-            // Check if user already reviewed
+            // Jika memenuhi syarat beli, pastikan user belum pernah mereview produk ini sebelumnya
+            // Satu akun = satu review per produk
             if ($canReview) {
                 $alreadyReviewed = $product->reviews()->where('user_id', auth()->id())->exists();
                 if ($alreadyReviewed) {

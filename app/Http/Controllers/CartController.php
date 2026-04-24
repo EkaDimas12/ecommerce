@@ -122,10 +122,17 @@ class CartController extends Controller
         return back();
     }
 
+    /**
+     * Memproses dan memvalidasi penggunaan kupon yang diinputkan pengguna.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function applyCoupon(Request $request)
     {
         $request->validate(['code' => 'required|string']);
 
+        // Cari kupon berdasarkan kode yang dimasukkan dan pastikan aktif
         $coupon = \App\Models\Coupon::where('code', $request->code)
             ->where('is_active', true)
             ->first();
@@ -134,21 +141,24 @@ class CartController extends Controller
             return back()->with('toast', ['type' => 'danger', 'message' => 'Kupon tidak valid atau sudah tidak aktif.']);
         }
 
+        // Cek apakah tanggal kedaluwarsa kupon sudah terlewat
         if ($coupon->expires_at && $coupon->expires_at->isPast()) {
             return back()->with('toast', ['type' => 'danger', 'message' => 'Kupon sudah kedaluwarsa.']);
         }
 
+        // Cek apakah batas jumlah penggunaan kupon sudah penuh
         if ($coupon->usage_limit !== null && $coupon->used_count >= $coupon->usage_limit) {
             return back()->with('toast', ['type' => 'danger', 'message' => 'Batas penggunaan kupon ini sudah habis.']);
         }
 
-        // Calculate cart total to check min_purchase
+        // Hitung subtotal keranjang saat ini untuk mengecek syarat minimal belanja
         $cart = session()->get('cart', []);
         $subtotal = 0;
         foreach ($cart as $item) {
             $subtotal += $item['price'] * $item['qty'];
         }
 
+        // Tolak kupon jika belanjaan kurang dari batas minimum
         if ($subtotal < $coupon->min_purchase) {
             return back()->with('toast', [
                 'type' => 'danger',
@@ -156,12 +166,15 @@ class CartController extends Controller
             ]);
         }
 
-        // Store in session
+        // Simpan data kupon ke dalam session pengguna
         session()->put('coupon', $coupon);
 
         return back()->with('toast', ['type' => 'success', 'message' => 'Kupon berhasil digunakan!']);
     }
 
+    /**
+     * Menghapus atau membatalkan penggunaan kupon dari session.
+     */
     public function removeCoupon()
     {
         session()->forget('coupon');
