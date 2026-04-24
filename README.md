@@ -1,66 +1,76 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/favicon.ico" alt="Tsaniacraft Logo" width="100">
 </p>
 
-## About Laravel
+# Tsaniacraft - E-Commerce Kerajinan Tangan
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Tsaniacraft** adalah platform e-commerce yang dirancang khusus untuk mempermudah transaksi jual beli berbagai produk kerajinan tangan (*handicraft*). Platform ini menyediakan katalog produk yang indah, fitur keranjang belanja, serta sistem checkout terintegrasi yang memudahkan pembeli.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Tsaniacraft menonjol dengan integrasi layanan pengiriman lokal terpercaya, **Komerce.id**, untuk menyediakan estimasi ongkos kirim (ongkir) secara real-time langsung pada halaman checkout. Selain itu, sistem ini mendukung gerbang pembayaran menggunakan **Midtrans** untuk transaksi yang cepat dan aman.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Tsaniacraft dibangun dengan fokus keamanan dan pengalaman pengguna, menerapkan kebijakan autentikasi yang kuat dan fitur proteksi seperti *brute-force protection* pada halaman login, memastikan lingkungan transaksi yang aman bagi pembeli maupun administrator.
 
-## Learning Laravel
+## ✨ Fitur Utama
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **Katalog Produk Dinamis**: Penampilan produk kerajinan yang menarik dengan dukungan multiple gambar dan deskripsi.
+- **Sistem Keranjang & Checkout**: Manajemen keranjang belanja dengan sesi pengguna yang mulus.
+- **Integrasi Ongkos Kirim (Komerce.id)**: Kalkulasi biaya ongkos kirim secara instan ke berbagai wilayah di Indonesia.
+- **Pembayaran Otomatis (Midtrans)**: Mendukung berbagai metode pembayaran (GoPay, Transfer Bank, QRIS, dll) dengan pembaruan status pesanan secara otomatis.
+- **Sistem Kupon & Diskon**: Manjemen promosi dengan potongan harga berjenis nominal (*fixed*) atau persentase, dilengkapi syarat minimal belanja dan batas pemakaian.
+- **Ulasan & Rating Produk**: Pembeli yang telah menerima barang dapat memberikan penilaian bintang (1-5) dan ulasan pengalaman mereka.
+- **Panel Admin Komprehensif**: Manajemen produk, kategori, pengguna, ulasan, pesanan, dan laporan log transaksi, dilengkapi dengan *pagination* agar ringan memuat data besar.
+- **Keamanan yang Kuat**: Proteksi manipulasi *cart*, validasi keranjang saat pembayaran, serta sistem anti *brute-force* pada halaman otentikasi.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 🛠️ Teknologi yang Digunakan
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Backend**: [Laravel 10+](https://laravel.com) (PHP)
+- **Frontend / Styling**: Blade Templating, [Tailwind CSS](https://tailwindcss.com), dan [Alpine.js](https://alpinejs.dev)
+- **Database**: MySQL
+- **Integrasi Pihak Ketiga**:
+  - [Midtrans](https://midtrans.com/) (Payment Gateway)
+  - [Komerce](https://komerce.id/) (Shipping API)
 
-## Laravel Sponsors
+## 🚀 Panduan Instalasi (Development)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Untuk menjalankan proyek ini di lingkungan lokal Anda, ikuti langkah-langkah berikut:
 
-### Premium Partners
+1. **Kloning repositori ini:**
+   ```bash
+   git clone https://github.com/EkaDimas12/ecommerce.git
+   cd ecommerce
+   ```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+2. **Instal dependensi Composer:**
+   ```bash
+   composer install
+   ```
 
-## Contributing
+3. **Instal dependensi NPM & kompilasi aset:**
+   ```bash
+   npm install
+   npm run build
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+4. **Konfigurasi Environment:**
+   Salin file konfigurasi `.env.example` menjadi `.env` lalu sesuaikan kredensial database dan API Keys Anda.
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+   *Pastikan untuk mengisi kredensial API Midtrans dan Komerce di dalam `.env`.*
 
-## Code of Conduct
+5. **Migrasi Database & Seeding (opsional):**
+   ```bash
+   php artisan migrate
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+6. **Jalankan Server Lokal:**
+   ```bash
+   php artisan serve
+   ```
+   Aplikasi Anda kini berjalan di `http://localhost:8000`.
 
-## Security Vulnerabilities
+## 📜 Lisensi
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Aplikasi ini bersifat *open-source* dan dilisensikan di bawah [MIT License](https://opensource.org/licenses/MIT).
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
