@@ -64,5 +64,10 @@
                 @endforelse
             </tbody>
         </table>
+        @if ($testimonials->hasPages())
+            <div class="p-4 border-t border-slate-200">
+                {{ $testimonials->links() }}
+            </div>
+        @endif
     </div>
 @endsection

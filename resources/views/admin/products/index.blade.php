@@ -68,5 +68,10 @@
                 @endforelse
             </tbody>
         </table>
+        @if ($products->hasPages())
+            <div class="p-4 border-t border-gray-200">
+                {{ $products->links() }}
+            </div>
+        @endif
     </div>
 @endsection

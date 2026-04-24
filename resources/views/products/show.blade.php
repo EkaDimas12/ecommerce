@@ -41,7 +41,7 @@
 
         {{-- INFO --}}
         <div class="bg-white border border-humble/10 rounded-2xl shadow-soft p-5 md:p-6">
-            <div class="flex gap-2 flex-wrap">
+            <div class="flex gap-2 flex-wrap items-center">
                 <span class="px-3 py-1.5 rounded-full bg-almost border border-bubble text-humble text-xs font-semibold">
                     {{ $product->category->name ?? '-' }}
                 </span>
@@ -50,6 +50,14 @@
                     <span
                         class="px-3 py-1.5 rounded-full bg-milk border border-bubble text-humble text-xs font-semibold">Best
                         Seller</span>
+                @endif
+
+                @if($product->reviews()->count() > 0)
+                    <div class="flex items-center gap-1 ml-2 text-sm text-ink/70">
+                        <span class="text-amber-400">⭐</span>
+                        <span class="font-bold text-ink">{{ number_format($product->average_rating, 1) }}</span>
+                        <span class="text-xs">({{ $product->reviews()->count() }} ulasan)</span>
+                    </div>
                 @endif
             </div>
 
@@ -136,6 +144,67 @@
                     Untuk custom order, estimasi produksi 2–5 hari (tergantung antrian & tingkat detail).
                 </p>
             </div>
+        </div>
+    </section>
+
+    {{-- ================= REVIEWS ================= --}}
+    <section class="mt-12 bg-white border border-humble/10 rounded-2xl p-6 md:p-8 shadow-soft">
+        <h2 class="text-xl font-bold text-ink mb-6">Ulasan Produk</h2>
+
+        @if(session('toast'))
+            <div class="mb-4 p-4 rounded-xl {{ session('toast')['type'] === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200' }}">
+                {{ session('toast')['message'] }}
+            </div>
+        @endif
+
+        @if($canReview)
+            <div class="mb-8 p-6 bg-pinkbg rounded-xl border border-bubble/30">
+                <h3 class="font-bold text-ink mb-2">Tulis Ulasan Anda</h3>
+                <form action="{{ route('products.reviews.store', $product) }}" method="POST">
+                    @csrf
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-ink/70 mb-2">Rating</label>
+                        <select name="rating" class="border border-humble/20 rounded-xl px-4 py-2.5 bg-white w-full max-w-xs focus:ring-2 focus:ring-bubble/50 outline-none" required>
+                            <option value="5">⭐⭐⭐⭐⭐ (Sangat Bagus)</option>
+                            <option value="4">⭐⭐⭐⭐ (Bagus)</option>
+                            <option value="3">⭐⭐⭐ (Cukup)</option>
+                            <option value="2">⭐⭐ (Kurang)</option>
+                            <option value="1">⭐ (Sangat Kurang)</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-ink/70 mb-2">Komentar (Opsional)</label>
+                        <textarea name="comment" rows="3" class="border border-humble/20 rounded-xl px-4 py-2.5 bg-white w-full focus:ring-2 focus:ring-bubble/50 outline-none" placeholder="Ceritakan pengalaman Anda dengan produk ini..."></textarea>
+                    </div>
+                    <button type="submit" class="px-6 py-2.5 bg-humble text-white font-bold rounded-xl hover:bg-humble/90 transition shadow-soft">Kirim Ulasan</button>
+                </form>
+            </div>
+        @endif
+
+        <div class="space-y-6">
+            @forelse($product->reviews as $review)
+                <div class="pb-6 border-b border-humble/10 last:border-0 last:pb-0">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-full bg-bubble/20 flex items-center justify-center text-humble font-bold text-sm">
+                            {{ strtoupper(substr($review->user->name, 0, 1)) }}
+                        </div>
+                        <div>
+                            <div class="font-bold text-ink text-sm">{{ $review->user->name }}</div>
+                            <div class="text-xs text-ink/50">{{ $review->created_at->diffForHumans() }}</div>
+                        </div>
+                        <div class="ml-auto text-amber-400 text-sm tracking-widest">
+                            @for($i=0; $i<$review->rating; $i++)⭐@endfor
+                        </div>
+                    </div>
+                    @if($review->comment)
+                        <p class="text-sm text-ink/80 mt-2">{{ $review->comment }}</p>
+                    @endif
+                </div>
+            @empty
+                <div class="text-center py-8">
+                    <p class="text-ink/50 text-sm">Belum ada ulasan untuk produk ini.</p>
+                </div>
+            @endforelse
         </div>
     </section>
 

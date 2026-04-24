@@ -49,5 +49,10 @@
                 @endforelse
             </tbody>
         </table>
+        @if ($categories->hasPages())
+            <div class="p-4 border-t border-gray-200">
+                {{ $categories->links() }}
+            </div>
+        @endif
     </div>
 @endsection

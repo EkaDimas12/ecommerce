@@ -118,6 +118,53 @@ class CartController extends Controller
     public function clear()
     {
         session()->forget('cart');
+        session()->forget('coupon');
         return back();
+    }
+
+    public function applyCoupon(Request $request)
+    {
+        $request->validate(['code' => 'required|string']);
+
+        $coupon = \App\Models\Coupon::where('code', $request->code)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$coupon) {
+            return back()->with('toast', ['type' => 'danger', 'message' => 'Kupon tidak valid atau sudah tidak aktif.']);
+        }
+
+        if ($coupon->expires_at && $coupon->expires_at->isPast()) {
+            return back()->with('toast', ['type' => 'danger', 'message' => 'Kupon sudah kedaluwarsa.']);
+        }
+
+        if ($coupon->usage_limit !== null && $coupon->used_count >= $coupon->usage_limit) {
+            return back()->with('toast', ['type' => 'danger', 'message' => 'Batas penggunaan kupon ini sudah habis.']);
+        }
+
+        // Calculate cart total to check min_purchase
+        $cart = session()->get('cart', []);
+        $subtotal = 0;
+        foreach ($cart as $item) {
+            $subtotal += $item['price'] * $item['qty'];
+        }
+
+        if ($subtotal < $coupon->min_purchase) {
+            return back()->with('toast', [
+                'type' => 'danger',
+                'message' => 'Minimal belanja untuk kupon ini adalah Rp' . number_format($coupon->min_purchase, 0, ',', '.')
+            ]);
+        }
+
+        // Store in session
+        session()->put('coupon', $coupon);
+
+        return back()->with('toast', ['type' => 'success', 'message' => 'Kupon berhasil digunakan!']);
+    }
+
+    public function removeCoupon()
+    {
+        session()->forget('coupon');
+        return back()->with('toast', ['type' => 'success', 'message' => 'Kupon dibatalkan.']);
     }
 }

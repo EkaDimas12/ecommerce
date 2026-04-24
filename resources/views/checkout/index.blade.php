@@ -305,6 +305,29 @@
 
                         <div class="h-px bg-humble/10 my-5"></div>
 
+                        {{-- Kupon Diskon --}}
+                        <div class="mb-5">
+                            <label class="text-xs font-bold text-ink/60 uppercase tracking-wide mb-2 block">Kode Kupon</label>
+                            @if($coupon)
+                                <div class="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-green-600 font-bold">✓</span>
+                                        <span class="text-green-800 font-bold text-sm">{{ $coupon->code }}</span>
+                                    </div>
+                                    <form method="POST" action="{{ route('cart.coupon.remove') }}">
+                                        @csrf
+                                        <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-semibold">Hapus</button>
+                                    </form>
+                                </div>
+                            @else
+                                <form method="POST" action="{{ route('cart.coupon.apply') }}" class="flex gap-2">
+                                    @csrf
+                                    <input type="text" name="code" class="field flex-1 !mb-0" placeholder="Masukkan kode kupon" required>
+                                    <button type="submit" class="px-4 py-2.5 bg-ink text-white font-bold rounded-xl hover:bg-ink/90 transition text-sm">Gunakan</button>
+                                </form>
+                            @endif
+                        </div>
+
                         {{-- Totals --}}
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between">
@@ -316,6 +339,12 @@
                                 <span class="font-bold text-ink"
                                     x-text="shippingCost === 0 ? 'Gratis' : `Rp${shippingCost.toLocaleString('id-ID')}`"></span>
                             </div>
+                            @if($coupon)
+                                <div class="flex justify-between text-green-600">
+                                    <span class="font-semibold">Diskon ({{ $coupon->code }})</span>
+                                    <span class="font-bold">-Rp{{ number_format($discountAmount, 0, ',', '.') }}</span>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="h-px bg-humble/10 my-4"></div>
@@ -323,7 +352,7 @@
                         <div class="flex justify-between items-center">
                             <span class="font-bold text-ink text-lg">Total</span>
                             <span class="font-extrabold text-2xl text-inlove"
-                                x-text="`Rp${total.toLocaleString('id-ID')}`"></span>
+                                x-text="`Rp${(total - {{ $discountAmount ?? 0 }}).toLocaleString('id-ID')}`"></span>
                         </div>
                     </div>
 

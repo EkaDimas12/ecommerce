@@ -100,13 +100,31 @@ class CheckoutController extends Controller
         $midtransClientKey = $this->midtrans->getClientKey();
         $midtransSnapUrl = $this->midtrans->getSnapUrl();
 
+        $coupon = session('coupon');
+        $discountAmount = 0;
+        if ($coupon) {
+            if ($coupon->type === 'fixed') {
+                $discountAmount = $coupon->value;
+            } else {
+                $discountAmount = $subtotal * ($coupon->value / 100);
+                if ($coupon->max_discount !== null && $discountAmount > $coupon->max_discount) {
+                    $discountAmount = $coupon->max_discount;
+                }
+            }
+            if ($discountAmount > $subtotal) {
+                $discountAmount = $subtotal;
+            }
+        }
+
         return view('checkout.index', compact(
             'items', 
             'subtotal', 
             'weight', 
             'codWhitelist',
             'midtransClientKey',
-            'midtransSnapUrl'
+            'midtransSnapUrl',
+            'coupon',
+            'discountAmount'
         ));
     }
 
@@ -171,13 +189,42 @@ class CheckoutController extends Controller
         $subtotal = collect($items)->sum(fn ($i) => $i['price'] * $i['qty']);
         $total = $subtotal + $shippingCost;
 
+        // Apply coupon if exists in session
+        $coupon = session('coupon');
+        $discountAmount = 0;
+        $couponCode = null;
+
+        if ($coupon) {
+            // Re-validate coupon
+            $dbCoupon = \App\Models\Coupon::where('code', $coupon->code)->where('is_active', true)->first();
+            if ($dbCoupon && (!$dbCoupon->expires_at || !$dbCoupon->expires_at->isPast()) && ($dbCoupon->usage_limit === null || $dbCoupon->used_count < $dbCoupon->usage_limit) && $subtotal >= $dbCoupon->min_purchase) {
+                
+                if ($dbCoupon->type === 'fixed') {
+                    $discountAmount = $dbCoupon->value;
+                } else {
+                    $discountAmount = $subtotal * ($dbCoupon->value / 100);
+                    if ($dbCoupon->max_discount !== null && $discountAmount > $dbCoupon->max_discount) {
+                        $discountAmount = $dbCoupon->max_discount;
+                    }
+                }
+                
+                // Ensure discount does not exceed subtotal
+                if ($discountAmount > $subtotal) {
+                    $discountAmount = $subtotal;
+                }
+
+                $total = $subtotal - $discountAmount + $shippingCost;
+                $couponCode = $dbCoupon->code;
+            }
+        }
+
         $code = 'TC-' . strtoupper(Str::random(8));
 
         // Determine initial payment status
         $paymentStatus = $request->payment_method === 'cod' ? 'cod' : 'pending';
 
         // Wrap in transaction to ensure consistency
-        $order = DB::transaction(function () use ($request, $code, $isPickup, $shippingCost, $subtotal, $total, $paymentStatus, $items) {
+        $order = DB::transaction(function () use ($request, $code, $isPickup, $shippingCost, $subtotal, $discountAmount, $couponCode, $total, $paymentStatus, $items) {
             $order = Order::create([
                 'code'           => $code,
                 'user_id'        => auth()->id(),
@@ -192,6 +239,8 @@ class CheckoutController extends Controller
                 'courier'        => $request->courier ?? 'pickup',
                 'service'        => $isPickup ? 'pickup' : $request->service,
                 'shipping_cost'  => $shippingCost,
+                'coupon_code'    => $couponCode,
+                'discount_amount'=> $discountAmount,
 
                 'subtotal'       => $subtotal,
                 'total'          => $total,
@@ -217,11 +266,16 @@ class CheckoutController extends Controller
                     ->decrement('stock', $it['qty']);
             }
 
+            if ($couponCode) {
+                \App\Models\Coupon::where('code', $couponCode)->increment('used_count');
+            }
+
             return $order;
         });
 
         // Clear cart ONLY IF transaction is successful
         session()->forget('cart');
+        session()->forget('coupon');
 
         // Log transaksi: pesanan baru dibuat
         TransactionLog::record($order, 'created', 'checkout', [

@@ -68,7 +68,7 @@ class ProductController extends Controller
     public function show(string $slug)
     {
         $product = Product::query()
-            ->with('category')
+            ->with(['category', 'reviews.user'])
             ->where('slug', $slug)
             ->firstOrFail();
 
@@ -81,6 +81,23 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
-        return view('products.show', compact('product', 'related'));
+        $canReview = false;
+        if (auth()->check()) {
+            $canReview = \App\Models\Order::where('user_id', auth()->id())
+                ->whereIn('order_status', ['shipped', 'delivered', 'completed'])
+                ->whereHas('items', function ($query) use ($product) {
+                    $query->where('product_id', $product->id);
+                })->exists();
+                
+            // Check if user already reviewed
+            if ($canReview) {
+                $alreadyReviewed = $product->reviews()->where('user_id', auth()->id())->exists();
+                if ($alreadyReviewed) {
+                    $canReview = false;
+                }
+            }
+        }
+
+        return view('products.show', compact('product', 'related', 'canReview'));
     }
 }

@@ -19,7 +19,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/signup', [AuthController::class, 'register'])->name('register.store');
 
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.store');
 });
 
 // Logout route (requires auth)
@@ -78,6 +78,10 @@ Route::get('/produk', [ProductController::class, 'index'])
 Route::get('/produk/{slug}', [ProductController::class, 'show'])
     ->name('products.show');
 
+Route::post('/produk/{product}/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])
+    ->name('products.reviews.store')
+    ->middleware('auth');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -92,6 +96,9 @@ Route::get('/keranjang', [CartController::class, 'index'])->name('cart.index')->
 Route::post('/keranjang/add', [CartController::class, 'add'])->name('cart.add')->middleware('auth');
 Route::post('/keranjang/remove', [CartController::class, 'remove'])->name('cart.remove')->middleware('auth');
 Route::post('/keranjang/clear', [CartController::class, 'clear'])->name('cart.clear')->middleware('auth');
+
+Route::post('/keranjang/coupon/apply', [CartController::class, 'applyCoupon'])->name('cart.coupon.apply')->middleware('auth');
+Route::post('/keranjang/coupon/remove', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove')->middleware('auth');
 
 
 
@@ -175,6 +182,7 @@ use App\Http\Controllers\Admin\UserAdminController;
 use App\Http\Controllers\Admin\TestimonialAdminController;
 use App\Http\Controllers\Admin\ContactMessageAdminController;
 use App\Http\Controllers\Admin\TransactionLogAdminController;
+use App\Http\Controllers\Admin\CouponAdminController;
 
 Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(function () {
     // Dashboard
@@ -236,5 +244,13 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
     // Messages
     Route::get('/messages', [ContactMessageAdminController::class, 'index'])->name('messages.index');
     Route::delete('/messages/{message}', [ContactMessageAdminController::class, 'destroy'])->name('messages.destroy');
+
+    // Coupons
+    Route::get('/coupons', [CouponAdminController::class, 'index'])->name('coupons.index');
+    Route::get('/coupons/create', [CouponAdminController::class, 'create'])->name('coupons.create');
+    Route::post('/coupons', [CouponAdminController::class, 'store'])->name('coupons.store');
+    Route::get('/coupons/{coupon}/edit', [CouponAdminController::class, 'edit'])->name('coupons.edit');
+    Route::put('/coupons/{coupon}', [CouponAdminController::class, 'update'])->name('coupons.update');
+    Route::delete('/coupons/{coupon}', [CouponAdminController::class, 'destroy'])->name('coupons.destroy');
 });
 
