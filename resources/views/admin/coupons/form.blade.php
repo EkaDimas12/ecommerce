@@ -11,14 +11,14 @@
             <div class="space-y-5">
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1">Kode Kupon <span class="text-red-500">*</span></label>
-                    <input type="text" name="code" value="{{ old('code', $coupon->code ?? '') }}" required class="w-full rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm uppercase" placeholder="Contoh: PROMO2025">
+                    <input type="text" name="code" value="{{ old('code', $coupon->code ?? '') }}" required class="w-full border bg-white px-4 py-2.5 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm uppercase" placeholder="Contoh: PROMO2025">
                     @error('code') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="grid grid-cols-2 gap-5">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Tipe Diskon <span class="text-red-500">*</span></label>
-                        <select name="type" required class="w-full rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm" x-data x-model="$store.couponType.type" @change="$store.couponType.type = $event.target.value">
+                        <select name="type" required class="w-full border bg-white px-4 py-2.5 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm" x-data x-model="$store.couponType.type" @change="$store.couponType.type = $event.target.value">
                             <option value="fixed" {{ old('type', $coupon->type ?? '') == 'fixed' ? 'selected' : '' }}>Nominal (Rp)</option>
                             <option value="percent" {{ old('type', $coupon->type ?? '') == 'percent' ? 'selected' : '' }}>Persentase (%)</option>
                         </select>
@@ -26,7 +26,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Nilai Diskon <span class="text-red-500">*</span></label>
-                        <input type="number" name="value" value="{{ old('value', $coupon->value ?? '') }}" required min="0" step="0.01" class="w-full rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="Contoh: 10000 atau 10">
+                        <input type="number" name="value" value="{{ old('value', $coupon->value ?? '') }}" required min="0" step="0.01" class="w-full border bg-white px-4 py-2.5 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="Contoh: 10000 atau 10">
                         @error('value') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -34,12 +34,12 @@
                 <div class="grid grid-cols-2 gap-5">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Minimal Belanja <span class="text-red-500">*</span></label>
-                        <input type="number" name="min_purchase" value="{{ old('min_purchase', $coupon->min_purchase ?? '0') }}" required min="0" class="w-full rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="0 untuk tanpa minimal">
+                        <input type="number" name="min_purchase" value="{{ old('min_purchase', $coupon->min_purchase ?? '0') }}" required min="0" class="w-full border bg-white px-4 py-2.5 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="0 untuk tanpa minimal">
                         @error('min_purchase') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div x-data="{ type: '{{ old('type', $coupon->type ?? 'fixed') }}' }" x-effect="type = $store.couponType ? $store.couponType.type : type" x-show="type === 'percent'">
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Maksimal Diskon (Opsional)</label>
-                        <input type="number" name="max_discount" value="{{ old('max_discount', $coupon->max_discount ?? '') }}" min="0" class="w-full rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="Kosongkan jika tidak ada batas">
+                        <input type="number" name="max_discount" value="{{ old('max_discount', $coupon->max_discount ?? '') }}" min="0" class="w-full border bg-white px-4 py-2.5 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="Kosongkan jika tidak ada batas">
                         @error('max_discount') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -47,13 +47,13 @@
                 <div class="grid grid-cols-2 gap-5">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Batas Penggunaan (Opsional)</label>
-                        <input type="number" name="usage_limit" value="{{ old('usage_limit', $coupon->usage_limit ?? '') }}" min="1" class="w-full rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="Contoh: 100">
+                        <input type="number" name="usage_limit" value="{{ old('usage_limit', $coupon->usage_limit ?? '') }}" min="1" class="w-full border bg-white px-4 py-2.5 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="Contoh: 100">
                         <p class="text-[11px] text-slate-400 mt-1">Kosongkan jika kuota tidak terbatas</p>
                         @error('usage_limit') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Kedaluwarsa Pada (Opsional)</label>
-                        <input type="datetime-local" name="expires_at" value="{{ old('expires_at', isset($coupon) && $coupon->expires_at ? $coupon->expires_at->format('Y-m-d\TH:i') : '') }}" class="w-full rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                        <input type="datetime-local" name="expires_at" value="{{ old('expires_at', isset($coupon) && $coupon->expires_at ? $coupon->expires_at->format('Y-m-d\TH:i') : '') }}" class="w-full border bg-white px-4 py-2.5 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm">
                         @error('expires_at') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
