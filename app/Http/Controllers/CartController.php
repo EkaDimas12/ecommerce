@@ -208,4 +208,35 @@ class CartController extends Controller
         session()->forget('coupon');
         return back()->with('toast', ['type' => 'success', 'message' => 'Kupon dibatalkan.']);
     }
+
+    /**
+     * Mempersiapkan checkout untuk item yang dipilih dari keranjang.
+     */
+    public function prepareCheckout(Request $request)
+    {
+        $request->validate([
+            'selected_items' => 'required|array',
+        ]);
+
+        $cart = session()->get('cart', []);
+        $selectedCart = [];
+
+        foreach ($request->selected_items as $id) {
+            if (isset($cart[$id])) {
+                $selectedCart[$id] = $cart[$id];
+            }
+        }
+
+        if (empty($selectedCart)) {
+            return back()->with('toast', [
+                'type' => 'danger',
+                'message' => 'Silakan pilih minimal satu produk untuk dicheckout.'
+            ]);
+        }
+
+        session()->put('selected_cart', $selectedCart);
+        session()->put('checkout_type', 'selected_cart');
+
+        return redirect()->route('checkout.index');
+    }
 }

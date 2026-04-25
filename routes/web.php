@@ -112,6 +112,10 @@ Route::post('/keranjang/coupon/remove', [CartController::class, 'removeCoupon'])
 | CHECKOUT & ORDER
 |--------------------------------------------------------------------------
 */
+Route::post('/checkout/prepare', [CartController::class, 'prepareCheckout'])
+    ->name('checkout.prepare')
+    ->middleware('auth');
+
 Route::get('/checkout', [CheckoutController::class, 'index'])
     ->name('checkout.index')
     ->middleware('auth');

@@ -43,108 +43,132 @@
                 </div>
             @endif
 
-            <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
-                {{-- LIST ITEM --}}
-                <div class="card-static p-5 md:p-6">
-                    <div class="flex items-center gap-2 mb-5">
-                        <span
-                            class="w-8 h-8 rounded-lg bg-humble flex items-center justify-center text-white text-sm">📦</span>
-                        <span class="font-bold text-ink">Daftar Produk</span>
-                        <span class="ml-auto badge">{{ count($cart) }} item</span>
-                    </div>
+            @php
+                $initialSelected = array_map('strval', array_keys($cart));
+            @endphp
 
-                    <div class="space-y-4">
-                        @foreach ($cart as $id => $item)
-                            <div
-                                class="flex justify-between gap-4 items-center flex-wrap p-4 rounded-2xl bg-pinkbg/50 hover:bg-pinkbg transition">
-                                <div class="flex gap-4 items-center">
-                                    @if (!empty($item['image']))
-                                        <img src="{{ asset('storage/' . $item['image']) }}" alt="{{ $item['name'] }}"
-                                            class="w-16 h-16 object-cover rounded-xl border border-humble/10">
-                                    @else
-                                        <div
-                                            class="w-16 h-16 rounded-xl bg-gradient-to-br from-bubble/20 to-almost flex items-center justify-center text-2xl">
-                                            🎁
-                                        </div>
-                                    @endif
+            <form method="POST" action="{{ route('checkout.prepare') }}" id="checkout-form" class="contents">
+                @csrf
+                <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start"
+                     x-data="{
+                         selectedItems: {{ json_encode($initialSelected) }},
+                         cartItems: {{ json_encode($cart) }},
+                         get subtotal() {
+                             let total = 0;
+                             for (let id of this.selectedItems) {
+                                 if (this.cartItems[id]) {
+                                     total += (parseInt(this.cartItems[id].price) * parseInt(this.cartItems[id].qty));
+                                 }
+                             }
+                             return total;
+                         },
+                         formatPrice(price) {
+                             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
+                         }
+                     }">
+                    
+                    {{-- LIST ITEM --}}
+                    <div class="card-static p-5 md:p-6">
+                        <div class="flex items-center gap-2 mb-5">
+                            <span
+                                class="w-8 h-8 rounded-lg bg-humble flex items-center justify-center text-white text-sm">📦</span>
+                            <span class="font-bold text-ink">Daftar Produk</span>
+                            <span class="ml-auto badge">{{ count($cart) }} item</span>
+                        </div>
 
-                                    <div>
-                                        <div class="font-bold text-ink">{{ $item['name'] ?? 'Produk' }}</div>
-                                        <div class="text-sm text-ink/60">
-                                            Rp{{ number_format((int) ($item['price'] ?? 0), 0, ',', '.') }}
-                                            <span class="mx-1">×</span>
-                                            <span class="font-medium text-ink">{{ (int) ($item['qty'] ?? 1) }}</span>
+                        <div class="space-y-4">
+                            @foreach ($cart as $id => $item)
+                                <div
+                                    class="flex justify-between gap-4 items-center flex-wrap p-4 rounded-2xl bg-pinkbg/50 hover:bg-pinkbg transition">
+                                    <div class="flex gap-4 items-center">
+                                        <input type="checkbox" name="selected_items[]" value="{{ $id }}" x-model="selectedItems"
+                                               class="w-5 h-5 rounded border-humble/30 text-humble focus:ring-humble/50 cursor-pointer">
+                                        
+                                        @if (!empty($item['image']))
+                                            <img src="{{ asset('storage/' . $item['image']) }}" alt="{{ $item['name'] }}"
+                                                class="w-16 h-16 object-cover rounded-xl border border-humble/10">
+                                        @else
+                                            <div
+                                                class="w-16 h-16 rounded-xl bg-gradient-to-br from-bubble/20 to-almost flex items-center justify-center text-2xl">
+                                                🎁
+                                            </div>
+                                        @endif
+
+                                        <div>
+                                            <div class="font-bold text-ink">{{ $item['name'] ?? 'Produk' }}</div>
+                                            <div class="text-sm text-ink/60">
+                                                Rp{{ number_format((int) ($item['price'] ?? 0), 0, ',', '.') }}
+                                                <span class="mx-1">×</span>
+                                                <span class="font-medium text-ink">{{ (int) ($item['qty'] ?? 1) }}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div class="flex gap-3 items-center">
-                                    <div class="font-bold text-inlove">
-                                        Rp{{ number_format(((int) ($item['price'] ?? 0)) * ((int) ($item['qty'] ?? 1)), 0, ',', '.') }}
-                                    </div>
+                                    <div class="flex gap-3 items-center">
+                                        <div class="font-bold text-inlove">
+                                            Rp{{ number_format(((int) ($item['price'] ?? 0)) * ((int) ($item['qty'] ?? 1)), 0, ',', '.') }}
+                                        </div>
 
-                                    {{-- HAPUS ITEM --}}
-                                    <form method="POST" action="{{ route('cart.remove') }}">
-                                        @csrf
-                                        <input type="hidden" name="id" value="{{ $id }}">
-                                        <button type="submit"
-                                            class="w-9 h-9 rounded-xl bg-red-50 border border-red-200 text-red-500 flex items-center justify-center hover:bg-red-100 transition">
+                                        {{-- HAPUS ITEM (Needs to be a button outside of this form's submission, but we can't easily nest forms. Since we use x-data, we can use a link with POST request or just change the button type to button and handle via JS, OR we can keep it as is, since HTML5 allows formaction) --}}
+                                        <button type="submit" formaction="{{ route('cart.remove') }}" name="id" value="{{ $id }}"
+                                                class="w-9 h-9 rounded-xl bg-red-50 border border-red-200 text-red-500 flex items-center justify-center hover:bg-red-100 transition">
                                             ✕
                                         </button>
-                                    </form>
+                                    </div>
                                 </div>
+                            @endforeach
+                        </div>
+
+                        {{-- CLEAR CART --}}
+                        <div class="mt-5 pt-5 border-t border-humble/10">
+                            <button type="submit" formaction="{{ route('cart.clear') }}" class="btn-outline text-sm">
+                                🗑️ Kosongkan Keranjang
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- SUMMARY --}}
+                    <aside class="card-static p-5 md:p-6 lg:sticky lg:top-24">
+                        <div class="flex items-center gap-2 mb-5">
+                            <span
+                                class="w-8 h-8 rounded-lg bg-bubble flex items-center justify-center text-white text-sm">📋</span>
+                            <span class="font-bold text-ink">Ringkasan</span>
+                        </div>
+
+                        <div class="space-y-3 mb-5">
+                            <div class="flex justify-between gap-3 text-sm">
+                                <span class="text-ink/60">Subtotal (<span x-text="selectedItems.length"></span> item)</span>
+                                <span class="font-bold text-ink" x-text="formatPrice(subtotal)">Rp{{ number_format($subtotal, 0, ',', '.') }}</span>
                             </div>
-                        @endforeach
-                    </div>
+                            <div class="flex justify-between gap-3 text-sm">
+                                <span class="text-ink/60">Ongkir</span>
+                                <span class="text-ink/60 italic">Dihitung di checkout</span>
+                            </div>
+                        </div>
 
-                    {{-- CLEAR CART --}}
-                    <form method="POST" action="{{ route('cart.clear') }}" class="mt-5 pt-5 border-t border-humble/10">
-                        @csrf
-                        <button type="submit" class="btn-outline text-sm">
-                            🗑️ Kosongkan Keranjang
+                        <div class="h-px bg-humble/10 my-4"></div>
+
+                        <div class="flex justify-between gap-3 mb-5">
+                            <span class="font-bold text-ink">Total</span>
+                            <span class="text-xl font-extrabold text-inlove" x-text="formatPrice(subtotal)">Rp{{ number_format($subtotal, 0, ',', '.') }}</span>
+                        </div>
+
+                        <button type="submit" class="block w-full btn-primary text-center" 
+                                :disabled="selectedItems.length === 0" 
+                                :class="selectedItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''">
+                            ✨ Checkout (<span x-text="selectedItems.length"></span>)
                         </button>
-                    </form>
+
+                        <a href="{{ route('products.index') }}" class="block w-full mt-3 btn-outline text-center">
+                            🛍️ Lanjut Belanja
+                        </a>
+
+                        <p class="mt-4 text-xs text-ink/50 text-center">
+                            🔒 Transaksi aman & terpercaya
+                        </p>
+                    </aside>
                 </div>
-
-                {{-- SUMMARY --}}
-                <aside class="card-static p-5 md:p-6 lg:sticky lg:top-24">
-                    <div class="flex items-center gap-2 mb-5">
-                        <span
-                            class="w-8 h-8 rounded-lg bg-bubble flex items-center justify-center text-white text-sm">📋</span>
-                        <span class="font-bold text-ink">Ringkasan</span>
-                    </div>
-
-                    <div class="space-y-3 mb-5">
-                        <div class="flex justify-between gap-3 text-sm">
-                            <span class="text-ink/60">Subtotal ({{ count($cart) }} item)</span>
-                            <span class="font-bold text-ink">Rp{{ number_format($subtotal, 0, ',', '.') }}</span>
-                        </div>
-                        <div class="flex justify-between gap-3 text-sm">
-                            <span class="text-ink/60">Ongkir</span>
-                            <span class="text-ink/60 italic">Dihitung di checkout</span>
-                        </div>
-                    </div>
-
-                    <div class="h-px bg-humble/10 my-4"></div>
-
-                    <div class="flex justify-between gap-3 mb-5">
-                        <span class="font-bold text-ink">Total</span>
-                        <span class="text-xl font-extrabold text-inlove">Rp{{ number_format($subtotal, 0, ',', '.') }}</span>
-                    </div>
-
-                    <a href="{{ route('checkout.index') }}" class="block w-full btn-primary text-center">
-                        ✨ Checkout
-                    </a>
-
-                    <a href="{{ route('products.index') }}" class="block w-full mt-3 btn-outline text-center">
-                        🛍️ Lanjut Belanja
-                    </a>
-
-                    <p class="mt-4 text-xs text-ink/50 text-center">
-                        🔒 Transaksi aman & terpercaya
-                    </p>
-                </aside>
-            </div>
+            </form>
         @endif
     </section>
 

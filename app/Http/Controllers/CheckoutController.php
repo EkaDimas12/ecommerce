@@ -24,7 +24,14 @@ class CheckoutController extends Controller
     private function cartItems(): array
     {
         $checkoutType = session('checkout_type', 'cart');
-        $raw = $checkoutType === 'buy_now' ? session('buy_now_cart', []) : session('cart', []);
+        
+        if ($checkoutType === 'buy_now') {
+            $raw = session('buy_now_cart', []);
+        } elseif ($checkoutType === 'selected_cart') {
+            $raw = session('selected_cart', []);
+        } else {
+            $raw = session('cart', []);
+        }
         $items = [];
         $hasChanges = false;
 
@@ -66,6 +73,8 @@ class CheckoutController extends Controller
             if ($hasChanges) {
                 if ($checkoutType === 'buy_now') {
                     session(['buy_now_cart' => $items]);
+                } elseif ($checkoutType === 'selected_cart') {
+                    session(['selected_cart' => $items]);
                 } else {
                     session(['cart' => $items]);
                 }
@@ -284,6 +293,14 @@ class CheckoutController extends Controller
         // Clear cart ONLY IF transaction is successful
         if (session('checkout_type') === 'buy_now') {
             session()->forget('buy_now_cart');
+        } elseif (session('checkout_type') === 'selected_cart') {
+            $selectedCart = session('selected_cart', []);
+            $mainCart = session('cart', []);
+            foreach (array_keys($selectedCart) as $id) {
+                unset($mainCart[$id]);
+            }
+            session()->put('cart', $mainCart);
+            session()->forget('selected_cart');
         } else {
             session()->forget('cart');
         }
