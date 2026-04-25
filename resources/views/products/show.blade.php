@@ -209,4 +209,46 @@
         </div>
     </section>
 
+    {{-- ================= RELATED PRODUCTS ================= --}}
+    @if($related->count() > 0)
+    <section class="mt-12">
+        <h2 class="text-xl md:text-2xl font-bold text-ink mb-6">Produk Terkait</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            @foreach($related as $p)
+                <a href="{{ route('products.show', $p->slug) }}" class="product-card group">
+                    <div class="p-3 relative overflow-hidden">
+                        @if ($p->is_best_seller)
+                            <span class="absolute top-4 left-4 z-10 badge badge-dark text-xs shadow-lg">⭐ Best</span>
+                        @endif
+
+                        @if ($p->main_image)
+                            <img src="{{ asset('storage/' . $p->main_image) }}" alt="{{ $p->name }}" class="w-full aspect-square object-cover rounded-2xl">
+                        @else
+                            <div class="w-full aspect-square rounded-2xl bg-gradient-to-br from-bubble/20 to-almost flex items-center justify-center text-4xl">🎁</div>
+                        @endif
+                    </div>
+
+                    <div class="px-4 pb-4">
+                        <div class="flex items-center justify-between gap-2 text-xs text-ink/50">
+                            <span>{{ $p->category->name ?? '-' }}</span>
+                            @if($p->reviews()->count() > 0)
+                                <span class="flex items-center gap-1 text-amber-400 font-medium">⭐ {{ number_format($p->average_rating, 1) }}</span>
+                            @endif
+                        </div>
+
+                        <div class="mt-2 font-bold text-ink group-hover:text-inlove transition">
+                            {{ $p->name }}
+                        </div>
+
+                        <div class="mt-2 text-lg font-extrabold text-inlove">
+                            Rp{{ number_format($p->price, 0, ',', '.') }}
+                        </div>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+    </section>
+    @endif
+
+
 @endsection
