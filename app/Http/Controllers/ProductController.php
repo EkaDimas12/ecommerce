@@ -13,19 +13,36 @@ class ProductController extends Controller
         $q = trim((string) $request->query('q', ''));
         $activeCategory = (string) $request->query('category', '');
         $activeSort = (string) $request->query('sort', 'newest');
+        $minPrice = $request->query('min_price');
+        $maxPrice = $request->query('max_price');
+        $minRating = $request->query('rating');
 
         $categories = Category::query()
             ->orderBy('name')
             ->get();
 
         $query = Product::query()
-            ->with('category');
+            ->with('category')
+            ->withAvg('reviews', 'rating');
 
         // Filter kategori
         if ($activeCategory !== '') {
             $query->whereHas('category', function ($cq) use ($activeCategory) {
                 $cq->where('slug', $activeCategory);
             });
+        }
+
+        // Filter Harga
+        if ($minPrice !== null && $minPrice !== '') {
+            $query->where('price', '>=', $minPrice);
+        }
+        if ($maxPrice !== null && $maxPrice !== '') {
+            $query->where('price', '<=', $maxPrice);
+        }
+
+        // Filter Rating
+        if ($minRating !== null && $minRating !== '') {
+            $query->having('reviews_avg_rating', '>=', $minRating);
         }
 
         // Search
@@ -62,6 +79,9 @@ class ProductController extends Controller
             'q' => $q,
             'activeCategory' => $activeCategory,
             'activeSort' => $activeSort,
+            'minPrice' => $minPrice,
+            'maxPrice' => $maxPrice,
+            'activeRating' => $minRating,
         ]);
     }
 

@@ -74,22 +74,43 @@
 
                 {{-- Quantity Selector --}}
                 <div class="mb-4">
-                    <div class="text-xs font-bold text-ink/70 mb-2">Jumlah</div>
-                    <div class="inline-flex items-center border border-humble/20 rounded-xl overflow-hidden bg-white">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="text-xs font-bold text-ink/70">Jumlah</div>
+                        @if($product->stock !== null)
+                            <div class="text-[11px] px-2 py-0.5 rounded-md {{ $product->stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                Sisa Stok: {{ $product->stock }}
+                            </div>
+                        @endif
+                    </div>
+                    <div class="inline-flex items-center border border-humble/20 rounded-xl overflow-hidden bg-white {{ $product->stock === 0 ? 'opacity-50 pointer-events-none' : '' }}">
                         <button type="button"
                             class="w-11 h-11 flex items-center justify-center text-lg font-bold text-ink hover:bg-bubble/20 transition"
                             @click="qty > 1 ? qty-- : null" :disabled="qty <= 1">−</button>
                         <input type="number"
                             class="w-14 h-11 text-center font-bold text-ink border-x border-humble/20 bg-transparent focus:outline-none"
-                            x-model.number="qty" min="1" max="99" readonly>
+                            x-model.number="qty" min="1" max="{{ $product->stock ?? 99 }}" readonly>
                         <button type="button"
                             class="w-11 h-11 flex items-center justify-center text-lg font-bold text-ink hover:bg-bubble/20 transition"
-                            @click="qty < 99 ? qty++ : null" :disabled="qty >= 99">+</button>
+                            @click="qty < {{ $product->stock ?? 99 }} ? qty++ : null" :disabled="qty >= {{ $product->stock ?? 99 }}">+</button>
                     </div>
                 </div>
 
                 <div class="flex gap-3 flex-wrap">
                     @auth
+                        {{-- Wishlist Toggle --}}
+                        <form method="POST" action="{{ route('wishlist.toggle', $product->id) }}">
+                            @csrf
+                            <button type="submit"
+                                class="w-12 h-12 flex items-center justify-center rounded-full border border-humble/20 text-ink hover:bg-bubble/20 transition {{ auth()->user()->wishlistedProducts->contains($product->id) ? 'bg-bubble/20 text-inlove' : 'bg-white' }}"
+                                title="Tambah ke Wishlist">
+                                @if(auth()->user()->wishlistedProducts->contains($product->id))
+                                    ❤️
+                                @else
+                                    🤍
+                                @endif
+                            </button>
+                        </form>
+
                         {{-- Tambah ke Keranjang --}}
                         <form method="POST" action="{{ route('cart.add') }}">
                             @csrf
@@ -97,7 +118,7 @@
                             <input type="hidden" name="qty" :value="qty">
 
                             <button type="submit"
-                                class="px-6 py-3 rounded-full bg-humble text-white font-bold shadow-soft hover:opacity-90 transition">
+                                class="px-6 py-3 rounded-full bg-humble text-white font-bold shadow-soft hover:opacity-90 transition {{ $product->stock === 0 ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $product->stock === 0 ? 'disabled' : '' }}>
                                 🛒 Tambah ke Keranjang
                             </button>
                         </form>
@@ -111,7 +132,7 @@
                             <input type="hidden" name="is_buy_now" value="1">
 
                             <button type="submit"
-                                class="px-6 py-3 rounded-full bg-bubble text-white font-bold shadow-soft hover:opacity-90 transition">
+                                class="px-6 py-3 rounded-full bg-bubble text-white font-bold shadow-soft hover:opacity-90 transition {{ $product->stock === 0 ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $product->stock === 0 ? 'disabled' : '' }}>
                                 ⚡ Beli Sekarang
                             </button>
                         </form>

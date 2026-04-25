@@ -1,73 +1,60 @@
-@extends('layouts.app')
+@extends('profile.layout')
+
 @section('title', 'Pesanan Saya — Tsania Craft')
 
-@section('content')
+@section('dashboard-content')
+    <div class="space-y-6">
+        {{-- Header Section --}}
+        <div class="bg-white border border-humble/10 rounded-2xl shadow-soft p-6">
+            <h1 class="text-2xl font-black text-ink">Pesanan Saya</h1>
+            <p class="text-sm text-ink/60 mt-1">Lihat status dan riwayat pesanan kamu di sini.</p>
+        </div>
 
-    {{-- HERO --}}
-    <section
-        style="background: linear-gradient(135deg, #fff 0%, #FEF0F5 50%, #FCE8EF 100%); border-radius: 24px; padding: 48px 32px; text-align: center; border: 1px solid rgba(74,32,42,0.08);">
-        <span
-            style="display: inline-block; padding: 8px 16px; background: #FCD6E3; border: 1px solid #E4879E; border-radius: 999px; font-size: 12px; font-weight: 600; color: #4A202A; margin-bottom: 16px;">
-            📦 Riwayat Pesanan
-        </span>
-        <h1 style="font-size: 36px; font-weight: 800; color: #2b0f16; margin: 0;">Pesanan Saya</h1>
-        <p style="margin-top: 16px; color: rgba(43,15,22,0.7); max-width: 500px; margin-left: auto; margin-right: auto;">
-            Lihat status dan riwayat pesanan kamu di sini.
-        </p>
-    </section>
-
-    <section style="margin-top: 40px;">
         @if ($orders->isEmpty())
-            <div
-                style="background: white; border: 1px solid rgba(74,32,42,0.08); border-radius: 20px; padding: 48px 32px; text-align: center; box-shadow: 0 4px 20px rgba(74,32,42,0.08);">
-                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.6;">📦</div>
-                <div style="font-size: 20px; font-weight: 800; color: #2b0f16;">Belum Ada Pesanan</div>
-                <p style="margin-top: 8px; color: rgba(43,15,22,0.6);">Kamu belum membuat pesanan apapun.</p>
-                <a href="{{ route('products.index') }}"
-                    style="display: inline-block; margin-top: 24px; padding: 14px 28px; background: #4A202A; color: white; font-weight: 700; font-size: 14px; border-radius: 999px; text-decoration: none; box-shadow: 0 4px 14px rgba(74,32,42,0.2);">
+            <div class="bg-white border border-humble/10 rounded-2xl shadow-soft p-12 text-center">
+                <div class="text-5xl mb-4 opacity-50">📦</div>
+                <h3 class="text-xl font-bold text-ink">Belum Ada Pesanan</h3>
+                <p class="text-sm text-ink/60 mt-2">Kamu belum membuat pesanan apapun.</p>
+                <a href="{{ route('products.index') }}" class="btn-primary inline-block mt-6 px-8 py-3">
                     🛍️ Mulai Belanja
                 </a>
             </div>
         @else
-            <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="space-y-4">
                 @foreach ($orders as $order)
-                    <div
-                        style="background: white; border: 1px solid rgba(74,32,42,0.08); border-radius: 20px; padding: 24px; box-shadow: 0 4px 20px rgba(74,32,42,0.08);">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+                    <div class="bg-white border border-humble/10 rounded-2xl shadow-soft p-6">
+                        <div class="flex justify-between items-start gap-4 flex-wrap">
                             <div>
-                                <div style="font-size: 12px; color: rgba(43,15,22,0.5);">Order Code</div>
-                                <div style="font-size: 18px; font-weight: 800; color: #2b0f16;">{{ $order->code }}</div>
-                                <div style="font-size: 13px; color: rgba(43,15,22,0.6); margin-top: 4px;">
+                                <div class="text-[10px] uppercase font-bold tracking-widest text-ink/40">Order Code</div>
+                                <div class="text-lg font-black text-ink">{{ $order->code }}</div>
+                                <div class="text-xs text-ink/50 mt-1">
                                     {{ $order->created_at->format('d M Y, H:i') }}
                                 </div>
                             </div>
-                            <div style="text-align: right;">
+                            <div class="text-right">
                                 @php
-                                    $statusColors = [
-                                        'pending' => '#F59E0B',
-                                        'paid' => '#10B981',
-                                        'processing' => '#3B82F6',
-                                        'shipped' => '#8B5CF6',
-                                        'delivered' => '#10B981',
-                                        'cancelled' => '#EF4444',
+                                    $statusClasses = [
+                                        'pending'    => 'bg-amber-100 text-amber-700 border-amber-200',
+                                        'paid'       => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                                        'processing' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                        'shipped'    => 'bg-purple-100 text-purple-700 border-purple-200',
+                                        'delivered'  => 'bg-green-100 text-green-700 border-green-200',
+                                        'cancelled'  => 'bg-red-100 text-red-700 border-red-200',
+                                        'new'        => 'bg-slate-100 text-slate-700 border-slate-200',
                                     ];
-                                    $color = $statusColors[$order->order_status] ?? '#6B7280';
+                                    $class = $statusClasses[$order->order_status] ?? 'bg-slate-100 text-slate-700 border-slate-200';
                                 @endphp
-                                <span
-                                    style="display: inline-block; padding: 6px 14px; background: {{ $color }}15; border: 1px solid {{ $color }}40; color: {{ $color }}; font-size: 12px; font-weight: 600; border-radius: 999px; text-transform: uppercase;">
+                                <span class="px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider {{ $class }}">
                                     {{ $order->order_status }}
                                 </span>
-                                <div style="font-size: 18px; font-weight: 800; color: #83394A; margin-top: 8px;">
+                                <div class="text-xl font-black text-inlove mt-2">
                                     Rp{{ number_format($order->total, 0, ',', '.') }}
                                 </div>
                             </div>
                         </div>
 
-                        <div
-                            style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(74,32,42,0.08); display: flex; gap: 12px; flex-wrap: wrap;">
-                            <a href="{{ route('order.show', $order->code) }}"
-                                style="display: inline-block; padding: 10px 20px; background: #FEF0F5; color: #4A202A; font-weight: 600; font-size: 14px; border-radius: 12px; text-decoration: none;">
+                        <div class="mt-6 pt-6 border-t border-humble/10 flex gap-3 flex-wrap">
+                            <a href="{{ route('order.show', $order->code) }}" class="px-5 py-2.5 bg-bubble/20 text-inlove font-bold rounded-xl text-sm hover:bg-bubble/30 transition">
                                 Lihat Detail →
                             </a>
 
@@ -78,7 +65,7 @@
                                     data-confirm-msg="Yakin ingin membatalkan pesanan {{ $order->code }}?">
                                     @csrf
                                     <button type="submit"
-                                        style="padding: 10px 20px; background: #FEE2E2; color: #DC2626; font-weight: 600; font-size: 14px; border-radius: 12px; border: 1px solid #FECACA; cursor: pointer;">
+                                        class="px-5 py-2.5 bg-red-50 text-red-600 font-bold rounded-xl text-sm border border-red-100 hover:bg-red-100 transition">
                                         ❌ Batalkan
                                     </button>
                                 </form>
@@ -88,10 +75,9 @@
                 @endforeach
             </div>
 
-            <div style="margin-top: 24px;">
+            <div class="mt-6">
                 {{ $orders->links() }}
             </div>
         @endif
-    </section>
-
+    </div>
 @endsection

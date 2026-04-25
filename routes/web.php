@@ -36,6 +36,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
     Route::put('/pengaturan/profil', [\App\Http\Controllers\SettingsController::class, 'updateProfile'])->name('settings.profile');
     Route::put('/pengaturan/password', [\App\Http\Controllers\SettingsController::class, 'updatePassword'])->name('settings.password');
+
+    // Wishlist
+    Route::get('/wishlist', [\App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/{product}/toggle', [\App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle');
 });
 
 

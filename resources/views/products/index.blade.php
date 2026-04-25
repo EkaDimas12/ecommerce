@@ -48,15 +48,46 @@
 
                 <div class="h-px bg-humble/10 my-4"></div>
 
-                <div class="text-xs font-bold text-ink/50 uppercase tracking-wide mb-2">Cari</div>
-                <form method="GET" action="{{ route('products.index') }}">
-                    <div class="flex flex-col gap-2">
-                        <input class="field text-sm" name="q" value="{{ $q ?? '' }}"
-                            placeholder="Nama produk...">
-                        <input type="hidden" name="category" value="{{ $activeCategory ?? '' }}">
-                        <input type="hidden" name="sort" value="{{ $activeSort ?? 'newest' }}">
-                        <button class="btn-primary text-sm py-2.5">🔍 Cari</button>
+                <div class="text-xs font-bold text-ink/50 uppercase tracking-wide mb-2">Filter & Cari</div>
+                <form method="GET" action="{{ route('products.index') }}" class="space-y-4">
+                    <input type="hidden" name="category" value="{{ $activeCategory ?? '' }}">
+                    <input type="hidden" name="sort" value="{{ $activeSort ?? 'newest' }}">
+
+                    <div>
+                        <label class="text-[10px] font-bold text-ink/40 uppercase mb-1 block">Kata Kunci</label>
+                        <input class="field text-sm w-full" name="q" value="{{ $q ?? '' }}" placeholder="Nama produk...">
                     </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] font-bold text-ink/40 uppercase mb-1 block">Min Harga</label>
+                            <input type="number" class="field text-sm w-full" name="min_price" value="{{ $minPrice ?? '' }}" placeholder="Rp">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-ink/40 uppercase mb-1 block">Max Harga</label>
+                            <input type="number" class="field text-sm w-full" name="max_price" value="{{ $maxPrice ?? '' }}" placeholder="Rp">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold text-ink/40 uppercase mb-1 block">Rating Minimal</label>
+                        <select name="rating" class="field text-sm w-full">
+                            <option value="">Semua Rating</option>
+                            <option value="5" {{ ($activeRating ?? '') == '5' ? 'selected' : '' }}>⭐⭐⭐⭐⭐ 5</option>
+                            <option value="4" {{ ($activeRating ?? '') == '4' ? 'selected' : '' }}>⭐⭐⭐⭐ 4+</option>
+                            <option value="3" {{ ($activeRating ?? '') == '3' ? 'selected' : '' }}>⭐⭐⭐ 3+</option>
+                            <option value="2" {{ ($activeRating ?? '') == '2' ? 'selected' : '' }}>⭐⭐ 2+</option>
+                            <option value="1" {{ ($activeRating ?? '') == '1' ? 'selected' : '' }}>⭐ 1+</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-primary w-full py-3">🔍 Terapkan Filter</button>
+                    
+                    @if($q || $minPrice || $maxPrice || $activeRating)
+                        <a href="{{ route('products.index', ['category' => $activeCategory, 'sort' => $activeSort]) }}" class="block text-center text-xs text-inlove font-bold hover:underline">
+                            Hapus Filter
+                        </a>
+                    @endif
                 </form>
             </aside>
 
