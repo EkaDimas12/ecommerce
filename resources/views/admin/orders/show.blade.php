@@ -81,10 +81,10 @@
                     @foreach ($order->items as $item)
                         <div class="py-3.5 flex justify-between items-center">
                             <div>
-                                <span class="text-sm font-medium text-slate-800">{{ $item->product_name }}</span>
-                                <span class="text-slate-400 text-sm ml-1">× {{ $item->quantity }}</span>
+                                <span class="text-sm font-medium text-slate-800">{{ $item->name_snapshot }}</span>
+                                <span class="text-slate-400 text-sm ml-1">× {{ $item->qty }}</span>
                             </div>
-                            <span class="text-sm font-semibold text-slate-700">Rp{{ number_format($item->price * $item->quantity, 0, ',', '.') }}</span>
+                            <span class="text-sm font-semibold text-slate-700">Rp{{ number_format($item->subtotal, 0, ',', '.') }}</span>
                         </div>
                     @endforeach
                 </div>
