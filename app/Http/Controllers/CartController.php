@@ -93,8 +93,8 @@ class CartController extends Controller
 
         if ($request->filled('redirect_to')) {
             $url = $request->redirect_to;
-            // Only allow internal redirects (relative paths)
-            if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
+            // Only allow internal redirects (relative paths or matching app url)
+            if ((str_starts_with($url, '/') && !str_starts_with($url, '//')) || str_starts_with($url, url('/'))) {
                 return redirect($url);
             }
         }
