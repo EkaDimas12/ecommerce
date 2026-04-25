@@ -45,20 +45,25 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Slug (opsional)</label>
-                    <input type="text" name="slug" value="{{ old('slug', $product?->slug) }}"
-                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="kosongkan untuk generate otomatis">
-                </div>
-
-                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp) *</label>
                     <input type="number" name="price" value="{{ old('price', $product?->price) }}"
                         class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         min="0" required>
                 </div>
-            </div>
 
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Stok (kosongkan jika tak terbatas)</label>
+                    <input type="number" name="stock" value="{{ old('stock', $product?->stock) }}"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        min="0">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Slug (opsional)</label>
+                <input type="text" name="slug" value="{{ old('slug', $product?->slug) }}"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="kosongkan untuk generate otomatis">
+            </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi *</label>
                 <textarea name="description" rows="4"

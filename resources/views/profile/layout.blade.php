@@ -26,7 +26,7 @@
                         <span>❤️</span> Wishlist
                     </a>
                     <div class="h-px bg-humble/10 my-2"></div>
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('logout') }}" data-confirm="Apakah Anda yakin ingin keluar?" data-confirm-title="Konfirmasi Keluar" data-confirm-btn="Ya, Keluar">
                         @csrf
                         <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition text-left">
                             <span>🚪</span> Keluar

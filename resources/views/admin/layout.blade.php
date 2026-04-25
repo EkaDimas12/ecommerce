@@ -138,7 +138,7 @@
                     <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
                     <span class="text-[13px] font-medium">Lihat Website</span>
                 </a>
-                <form action="{{ route('logout') }}" method="POST">
+                <form action="{{ route('logout') }}" method="POST" data-confirm="Apakah Anda yakin ingin keluar dari halaman admin?" data-confirm-title="Konfirmasi Logout" data-confirm-btn="Ya, Keluar">
                     @csrf
                     <button type="submit"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all">
@@ -261,9 +261,10 @@
             const btnOk     = document.getElementById('confirmOk');
             let pendingForm = null;
 
-            function openModal(title, message) {
+            function openModal(title, message, btnText) {
                 titleEl.textContent = title || 'Konfirmasi Hapus';
                 msgEl.textContent   = message || 'Apakah Anda yakin? Tindakan ini tidak dapat dibatalkan.';
+                btnOk.textContent   = btnText || 'Ya, Hapus';
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
                 requestAnimationFrame(() => {
@@ -296,7 +297,7 @@
                 }
                 e.preventDefault();
                 pendingForm = form;
-                openModal(form.dataset.confirmTitle, form.dataset.confirm);
+                openModal(form.dataset.confirmTitle, form.dataset.confirm, form.dataset.confirmBtn);
             });
 
             btnOk.addEventListener('click', function() {

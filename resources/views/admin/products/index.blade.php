@@ -18,6 +18,7 @@
                     <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Nama</th>
                     <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Kategori</th>
                     <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Harga</th>
+                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Stok</th>
                     <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Best Seller</th>
                     <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Aksi</th>
                 </tr>
@@ -39,6 +40,15 @@
                         <td class="px-6 py-4 text-sm text-gray-800 font-medium">{{ $product->name }}</td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $product->category?->name ?? '-' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-800">Rp{{ number_format($product->price, 0, ',', '.') }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-800">
+                            @if ($product->stock === null)
+                                <span class="text-gray-400">Tak Terbatas</span>
+                            @elseif($product->stock <= 0)
+                                <span class="text-red-600 font-bold">Habis</span>
+                            @else
+                                {{ $product->stock }}
+                            @endif
+                        </td>
                         <td class="px-6 py-4 text-sm">
                             @if ($product->is_best_seller)
                                 <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">⭐ Best Seller</span>

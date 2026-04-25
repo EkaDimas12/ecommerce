@@ -30,6 +30,7 @@ class ProductAdminController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:products,slug',
             'price' => 'required|numeric|min:0',
+            'stock' => 'nullable|integer|min:0',
             'description' => 'required|string',
             'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'is_best_seller' => 'nullable|boolean',
@@ -40,6 +41,7 @@ class ProductAdminController extends Controller
             'name' => $request->name,
             'slug' => $request->slug ?: Str::slug($request->name),
             'price' => $request->price,
+            'stock' => $request->stock,
             'description' => $request->description,
             'is_best_seller' => $request->boolean('is_best_seller'),
         ];
@@ -68,6 +70,7 @@ class ProductAdminController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:products,slug,' . $product->id,
             'price' => 'required|numeric|min:0',
+            'stock' => 'nullable|integer|min:0',
             'description' => 'required|string',
             'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'is_best_seller' => 'nullable|boolean',
@@ -78,6 +81,7 @@ class ProductAdminController extends Controller
             'name' => $request->name,
             'slug' => $request->slug ?: Str::slug($request->name),
             'price' => $request->price,
+            'stock' => $request->stock,
             'description' => $request->description,
             'is_best_seller' => $request->boolean('is_best_seller'),
         ];

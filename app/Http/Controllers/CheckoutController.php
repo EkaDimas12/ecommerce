@@ -47,12 +47,22 @@ class CheckoutController extends Controller
                 }
 
                 $product = $products[$key];
-                $qty = max(1, (int)($item['qty'] ?? 1));
+                $qty = (int)($item['qty'] ?? 1);
 
                 // Check stock
-                if ($product->stock !== null && $qty > $product->stock) {
-                    $qty = max(1, $product->stock);
+                if ($product->stock !== null) {
+                    if ($product->stock <= 0) {
+                        $qty = 0;
+                        $hasChanges = true;
+                    } elseif ($qty > $product->stock) {
+                        $qty = $product->stock;
+                        $hasChanges = true;
+                    }
+                }
+
+                if ($qty <= 0) {
                     $hasChanges = true;
+                    continue;
                 }
 
                 // Check price/name drift

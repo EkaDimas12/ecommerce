@@ -113,7 +113,7 @@
 
                                 <div class="h-px bg-humble/10 my-2"></div>
 
-                                <form method="POST" action="{{ route('logout') }}">
+                                <form method="POST" action="{{ route('logout') }}" data-confirm="Apakah Anda yakin ingin keluar?" data-confirm-title="Konfirmasi Keluar" data-confirm-btn="Ya, Keluar">
                                     @csrf
                                     <button type="submit"
                                         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 transition text-sm font-medium text-red-600">
@@ -173,7 +173,7 @@
                             href="{{ route('cart.index') }}">🛒 Keranjang</a>
 
                         @auth
-                            <form method="POST" action="{{ route('logout') }}" class="mt-2">
+                            <form method="POST" action="{{ route('logout') }}" class="mt-2" data-confirm="Apakah Anda yakin ingin keluar?" data-confirm-title="Konfirmasi Keluar" data-confirm-btn="Ya, Keluar">
                                 @csrf
                                 <button type="submit"
                                     class="w-full px-4 py-3 rounded-xl text-red-600 font-medium hover:bg-red-50 transition text-center">
@@ -337,8 +337,10 @@
         const btnOk = document.getElementById('confirmOk');
         let pendingForm = null;
 
-        function openModal(msg) {
+        function openModal(title, msg, btnText) {
+            titleEl.textContent = title || 'Konfirmasi';
             msgEl.textContent = msg || 'Apakah Anda yakin?';
+            btnOk.textContent = btnText || 'Ya, Lanjutkan';
             modal.style.display = 'flex';
             requestAnimationFrame(() => {
                 backdrop.style.opacity = '1';
@@ -354,12 +356,12 @@
         }
 
         document.addEventListener('submit', function(e) {
-            const form = e.target.closest('.confirm-cancel-form');
+            const form = e.target.closest('form[data-confirm]');
             if (!form) return;
             if (form.dataset._confirmed === 'true') { form.dataset._confirmed = ''; return; }
             e.preventDefault();
             pendingForm = form;
-            openModal(form.dataset.confirmMsg);
+            openModal(form.dataset.confirmTitle, form.dataset.confirm, form.dataset.confirmBtn);
         });
 
         btnOk.addEventListener('click', function() {
