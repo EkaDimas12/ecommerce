@@ -23,7 +23,8 @@ class CheckoutController extends Controller
 
     private function cartItems(): array
     {
-        $raw = session('cart', []);
+        $checkoutType = session('checkout_type', 'cart');
+        $raw = $checkoutType === 'buy_now' ? session('buy_now_cart', []) : session('cart', []);
         $items = [];
         $hasChanges = false;
 
@@ -63,7 +64,11 @@ class CheckoutController extends Controller
             }
 
             if ($hasChanges) {
-                session(['cart' => $items]);
+                if ($checkoutType === 'buy_now') {
+                    session(['buy_now_cart' => $items]);
+                } else {
+                    session(['cart' => $items]);
+                }
             }
         }
 
@@ -277,7 +282,12 @@ class CheckoutController extends Controller
         });
 
         // Clear cart ONLY IF transaction is successful
-        session()->forget('cart');
+        if (session('checkout_type') === 'buy_now') {
+            session()->forget('buy_now_cart');
+        } else {
+            session()->forget('cart');
+        }
+        session()->forget('checkout_type');
         session()->forget('coupon');
 
         // Log transaksi: pesanan baru dibuat

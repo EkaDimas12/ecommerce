@@ -9,6 +9,7 @@ class CartController extends Controller
 {
     public function index()
     {
+        session()->put('checkout_type', 'cart');
         $cart = session()->get('cart', []);
         $updatedCart = [];
         $hasChanges = false;
@@ -65,31 +66,58 @@ class CartController extends Controller
         ]);
 
         $product = Product::findOrFail($request->product_id);
-        $cart = session()->get('cart', []);
-        $currentQty = isset($cart[$product->id]) ? $cart[$product->id]['qty'] : 0;
-        $newQty = $currentQty + $request->qty;
-
-        if ($product->stock !== null && $newQty > $product->stock) {
-            return back()->with('toast', [
-                'type' => 'danger',
-                'message' => 'Stok produk tidak mencukupi. Sisa stok: ' . $product->stock,
-            ]);
-        }
-
-        if (isset($cart[$product->id])) {
-            $cart[$product->id]['qty'] = $newQty;
-        } else {
-            $cart[$product->id] = [
-                'id'    => $product->id,
-                'name'  => $product->name,
-                'price' => (int) $product->price,
-                'qty'   => (int) $request->qty,
-                'image' => $product->main_image,
-                'weight' => 200, // Make sure weight is present
+        if ($request->has('is_buy_now')) {
+            // For Buy Now, ignore existing cart and create a single-item temporary cart
+            $buyNowCart = [
+                $product->id => [
+                    'id'    => $product->id,
+                    'name'  => $product->name,
+                    'price' => (int) $product->price,
+                    'qty'   => (int) $request->qty,
+                    'image' => $product->main_image,
+                    'weight' => 200,
+                ]
             ];
-        }
 
-        session()->put('cart', $cart);
+            if ($product->stock !== null && $request->qty > $product->stock) {
+                return back()->with('toast', [
+                    'type' => 'danger',
+                    'message' => 'Stok produk tidak mencukupi. Sisa stok: ' . $product->stock,
+                ]);
+            }
+
+            session()->put('buy_now_cart', $buyNowCart);
+            session()->put('checkout_type', 'buy_now');
+        } else {
+            // Normal Add to Cart flow
+            $cart = session()->get('cart', []);
+            $currentQty = isset($cart[$product->id]) ? $cart[$product->id]['qty'] : 0;
+            $newQty = $currentQty + $request->qty;
+
+            if ($product->stock !== null && $newQty > $product->stock) {
+                return back()->with('toast', [
+                    'type' => 'danger',
+                    'message' => 'Stok produk tidak mencukupi. Sisa stok: ' . $product->stock,
+                ]);
+            }
+
+            if (isset($cart[$product->id])) {
+                $cart[$product->id]['qty'] = $newQty;
+            } else {
+                $cart[$product->id] = [
+                    'id'    => $product->id,
+                    'name'  => $product->name,
+                    'price' => (int) $product->price,
+                    'qty'   => (int) $request->qty,
+                    'image' => $product->main_image,
+                    'weight' => 200, // Make sure weight is present
+                ];
+            }
+
+            session()->put('cart', $cart);
+            // Optionally reset checkout type so normal cart actions reset it
+            session()->forget('checkout_type');
+        }
 
         if ($request->filled('redirect_to')) {
             $url = $request->redirect_to;

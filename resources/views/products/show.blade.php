@@ -108,6 +108,7 @@
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
                             <input type="hidden" name="qty" :value="qty">
                             <input type="hidden" name="redirect_to" value="{{ route('checkout.index', [], false) }}">
+                            <input type="hidden" name="is_buy_now" value="1">
 
                             <button type="submit"
                                 class="px-6 py-3 rounded-full bg-bubble text-white font-bold shadow-soft hover:opacity-90 transition">
